@@ -47,7 +47,7 @@ const refresh = async () => {
 };
 
 try {
-  await import("./assets/homeiios-panel.js");
+  await import("./homeiios-panel.js");
   const seconds = await refresh();
   setInterval(() => refresh().catch(console.error), seconds * 1000);
   addEventListener("resize", () => { panel.narrow = matchMedia("(max-width: 760px)").matches; });
@@ -55,4 +55,3 @@ try {
   boot.textContent = `HOMEiiOS לא הצליח להתחבר: ${error.message}`;
   console.error(error);
 }
-

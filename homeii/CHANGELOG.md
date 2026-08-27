@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.4
+
+- Fix the Ingress frontend module URL from `/assets/assets/homeiios-panel.js`
+  to `/assets/homeiios-panel.js`.
+
 ## 0.1.0-alpha.3
 
 - Temporarily disable the custom AppArmor profile to isolate persistent S6
