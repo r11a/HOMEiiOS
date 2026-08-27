@@ -1,5 +1,5 @@
 name: HOMEiiOS Alpha
-version: "0.1.0-alpha.2"
+version: "0.1.0-alpha.3"
 slug: homeii
 description: Premium dashboard runtime and control plane for Home Assistant OS
 url: https://github.com/r11a/HOMEiiOS
@@ -17,7 +17,7 @@ panel_icon: mdi:view-dashboard-variant
 panel_title: HOMEiiOS
 panel_admin: true
 homeassistant_api: true
-apparmor: true
+apparmor: false
 backup: hot
 map:
   - addon_config:rw

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.3
+
+- Temporarily disable the custom AppArmor profile to isolate persistent S6
+  `/init` startup failures on the HAOS test host.
+- Keep the Alpha isolated behind administrator-only Ingress with no published
+  network ports and only its dedicated app configuration mapped writable.
+
 ## 0.1.0-alpha.2
 
 - Allow the Home Assistant base image and S6 Overlay bootstrap through the
