@@ -52,7 +52,7 @@ async def health(_: web.Request) -> web.Response:
     status, config = await core_request("GET", "/config")
     return web.json_response({
         "status": "ok" if status == 200 else "degraded",
-        "version": "0.1.0-alpha.1",
+        "version": "0.1.0-alpha.2",
         "home_assistant": status == 200,
         "location_name": config.get("location_name") if isinstance(config, dict) else None,
     })
@@ -98,4 +98,3 @@ app.router.add_static("/assets", WWW, show_index=False)
 
 LOGGER.info("Starting HOMEiiOS Alpha on Ingress port 8099")
 web.run_app(app, host="0.0.0.0", port=8099, access_log=LOGGER)
-

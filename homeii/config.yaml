@@ -1,5 +1,5 @@
 name: HOMEiiOS Alpha
-version: "0.1.0-alpha.1"
+version: "0.1.0-alpha.2"
 slug: homeii
 description: Premium dashboard runtime and control plane for Home Assistant OS
 url: https://github.com/r11a/HOMEiiOS
@@ -27,4 +27,3 @@ options:
 schema:
   refresh_seconds: int(1,30)
   log_level: list(debug|info|warning|error)
-

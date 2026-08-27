@@ -3,13 +3,24 @@
 profile homeii flags=(attach_disconnected,mediate_deleted) {
   #include <abstractions/base>
   #include <abstractions/python>
+
+  # Home Assistant base image and S6 Overlay bootstrap.
+  /init ix,
+  /bin/** ix,
+  /usr/bin/** ix,
+  /usr/sbin/** ix,
+  /package/** rix,
+  /command/** rix,
+  /etc/services.d/** rix,
+  /etc/cont-init.d/** rix,
+  /etc/cont-finish.d/** rix,
+  /run/{,**} rwk,
+  /dev/tty rw,
+
   network inet stream,
   network inet6 stream,
   /opt/homeii/** r,
-  /usr/bin/python3 ix,
   /usr/lib/python3.*/** mr,
   /data/** rwk,
   /config/** rwk,
-  /run/s6/** rw,
 }
-
