@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0-alpha.2
+
+- Replaces the persistent widget library with a focused Quick Add flow.
+- Adds the primary `+ Add card` action directly above the dashboard canvas.
+- Reduces card creation to: choose card, choose entity, add.
+- Hides advanced design controls by default while keeping them one click away.
+- Filters unavailable card types based on the entities present in the selected HA Area.
+
 ## 0.6.0-alpha.1
 
 - Adds the HA-native, admin-only HOMEii Studio panel alongside the Add-on control plane.

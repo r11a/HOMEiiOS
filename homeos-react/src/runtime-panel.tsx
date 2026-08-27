@@ -10,6 +10,7 @@ import { StudioApp } from "./studio/StudioApp";
 import studioStyles from "./studio/studio.css?inline";
 import designSystem from "./studio/design-system.css?inline";
 import editorStyles from "./studio/editor.css?inline";
+import quickAddStyles from "./studio/quick-add.css?inline";
 
 class HomeiiPanel extends HTMLElement {
   private root: Root;
@@ -47,7 +48,7 @@ if (!customElements.get("homeii-panel")) customElements.define("homeii-panel", H
 class HomeiiStudioPanel extends HTMLElement {
   private root: Root;
   private _hass?: HomeAssistant;
-  constructor() { super(); const shadow=this.attachShadow({mode:"open"}); const style=document.createElement("style"); const mount=document.createElement("div"); style.textContent=`${studioStyles}\n${designSystem}\n${editorStyles}`; shadow.append(style,mount); this.root=createRoot(mount); }
+  constructor() { super(); const shadow=this.attachShadow({mode:"open"}); const style=document.createElement("style"); const mount=document.createElement("div"); style.textContent=`${studioStyles}\n${designSystem}\n${editorStyles}\n${quickAddStyles}`; shadow.append(style,mount); this.root=createRoot(mount); }
   set hass(value: HomeAssistant) { this._hass=value; this.renderPanel(); }
   connectedCallback() { this.renderPanel(); }
   disconnectedCallback() { this.root.unmount(); }
