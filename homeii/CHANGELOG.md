@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0-alpha.3
+
+- Add Area-aware room templates for balanced, comfort, cinema and security
+  layouts; templates create only widgets backed by compatible HA entities.
+- Add a live Studio canvas with active entity counts and domain state styling.
+- Add an entity binding inspector with friendly names, current HA state and
+  explicit per-widget selection.
+- Add a structured JSON editor that preserves regular HA card configuration
+  for the upcoming native HA Panel card host.
+
 ## 0.2.0-alpha.2
 
 - Raise the authenticated Home Assistant WebSocket message ceiling from the

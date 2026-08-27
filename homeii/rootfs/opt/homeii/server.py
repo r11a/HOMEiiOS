@@ -158,7 +158,7 @@ async def health(_: web.Request) -> web.Response:
     status, config = await core_request("GET", "/config")
     return web.json_response({
         "status": "ok" if status == 200 else "degraded",
-        "version": "0.2.0-alpha.2",
+        "version": "0.2.0-alpha.3",
         "home_assistant": status == 200,
         "location_name": config.get("location_name") if isinstance(config, dict) else None,
     })
