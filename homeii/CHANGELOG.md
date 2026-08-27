@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0-alpha.2
+
+- Recover the existing Alpha dashboard when a 0.3 Project Registry exists but
+  is still empty, preserving both legacy draft and published snapshots.
+
 ## 0.3.0-alpha.1
 
 - Replace the single-dashboard store with a versioned multi-project registry.

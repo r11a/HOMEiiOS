@@ -160,15 +160,19 @@ def empty_registry() -> dict[str, Any]:
 
 
 def load_registry() -> dict[str, Any]:
+    registry: dict[str, Any] | None = None
     try:
         value = json.loads(PROJECT_REGISTRY.read_text(encoding="utf-8"))
         if isinstance(value, dict) and isinstance(value.get("projects"), dict):
-            return value
+            registry = value
     except (OSError, json.JSONDecodeError):
         pass
-    registry = empty_registry()
+    if registry is None:
+        registry = empty_registry()
     legacy = load_project()
-    if legacy:
+    # Recover an existing Alpha dashboard even when a previous 0.3 launch
+    # already created an empty registry. Never overwrite a migrated project.
+    if legacy and not registry["projects"]:
         project_id = str(legacy.get("id") or "default")
         legacy["id"] = project_id
         registry["projects"][project_id] = legacy
@@ -208,7 +212,7 @@ async def health(_: web.Request) -> web.Response:
     status, config = await core_request("GET", "/config")
     return web.json_response({
         "status": "ok" if status == 200 else "degraded",
-        "version": "0.3.0-alpha.1",
+        "version": "0.3.0-alpha.2",
         "home_assistant": status == 200,
         "location_name": config.get("location_name") if isinstance(config, dict) else None,
     })
