@@ -87,7 +87,8 @@ function runtimeProjectConfig(base: HomeOSConfig, project: RuntimeProject, hass?
 async function readRuntimeProject(): Promise<RuntimeProject | null> {
   if (!location.pathname.includes("/api/hassio_ingress/")) return null;
   try {
-    const response = await fetch(`./api/runtime-project?t=${Date.now()}`, { cache: "no-store" });
+    const projectId = new URLSearchParams(location.search).get("project");
+    const response = await fetch(`./api/runtime-project?t=${Date.now()}${projectId ? `&projectId=${encodeURIComponent(projectId)}` : ""}`, { cache: "no-store" });
     if (!response.ok) return null;
     return await response.json() as RuntimeProject;
   } catch { return null; }

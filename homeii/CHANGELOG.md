@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0-alpha.1
+
+- Replace the single-dashboard store with a versioned multi-project registry.
+- Migrate the existing draft and published dashboard automatically without
+  deleting the legacy files.
+- Add a Project Manager with create, open and duplicate flows.
+- Add a seven-step setup wizard for identity, template and theme, Area/YAML
+  source, room selection, per-room Hero images, system background, categories,
+  dashboard/Ingress shortcuts and final review.
+- Give every project independent draft, published snapshot, revision, theme,
+  Areas, setup choices and permissions data.
+- Allow runtime selection through a stable `?project=<projectId>` parameter.
+
 ## 0.2.0-alpha.3
 
 - Add Area-aware room templates for balanced, comfort, cinema and security

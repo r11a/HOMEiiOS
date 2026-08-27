@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -16,6 +18,7 @@ WWW = Path(os.environ.get("HOMEII_WWW_PATH", "/opt/homeii/www"))
 OPTIONS = Path("/data/options.json")
 PROJECT = Path("/data/homeiios-project.json")
 PUBLISHED_PROJECT = Path("/data/homeiios-published.json")
+PROJECT_REGISTRY = Path("/data/homeiios-projects.json")
 TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
 CORE_API = "http://supervisor/core/api"
 CORE_WS = "ws://supervisor/core/websocket"
@@ -147,6 +150,53 @@ def load_project() -> dict[str, Any] | None:
         return None
 
 
+def project_slug(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9_-]+", "-", value.lower()).strip("-")
+    return slug[:48] or f"dashboard-{uuid.uuid4().hex[:8]}"
+
+
+def empty_registry() -> dict[str, Any]:
+    return {"schemaVersion": 1, "revision": 1, "activeProjectId": None, "projects": {}}
+
+
+def load_registry() -> dict[str, Any]:
+    try:
+        value = json.loads(PROJECT_REGISTRY.read_text(encoding="utf-8"))
+        if isinstance(value, dict) and isinstance(value.get("projects"), dict):
+            return value
+    except (OSError, json.JSONDecodeError):
+        pass
+    registry = empty_registry()
+    legacy = load_project()
+    if legacy:
+        project_id = str(legacy.get("id") or "default")
+        legacy["id"] = project_id
+        registry["projects"][project_id] = legacy
+        registry["activeProjectId"] = project_id
+        try:
+            published = json.loads(PUBLISHED_PROJECT.read_text(encoding="utf-8"))
+            if isinstance(published, dict):
+                registry["projects"][project_id]["published"] = published
+        except (OSError, json.JSONDecodeError):
+            pass
+        save_json(PROJECT_REGISTRY, registry)
+    return registry
+
+
+def save_registry(registry: dict[str, Any]) -> None:
+    registry["revision"] = int(registry.get("revision", 0)) + 1
+    save_json(PROJECT_REGISTRY, registry)
+
+
+def project_summary(project: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": project.get("id"), "name": project.get("name", "HOMEiiOS"),
+        "status": project.get("status", "draft"), "updatedAt": project.get("updatedAt", ""),
+        "areas": len(project.get("areas", {})), "template": project.get("template", "custom"),
+        "archived": bool(project.get("archived", False)),
+    }
+
+
 def save_json(path: Path, value: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(".tmp")
@@ -158,7 +208,7 @@ async def health(_: web.Request) -> web.Response:
     status, config = await core_request("GET", "/config")
     return web.json_response({
         "status": "ok" if status == 200 else "degraded",
-        "version": "0.2.0-alpha.3",
+        "version": "0.3.0-alpha.1",
         "home_assistant": status == 200,
         "location_name": config.get("location_name") if isinstance(config, dict) else None,
     })
@@ -188,17 +238,77 @@ async def discovery(_: web.Request) -> web.Response:
 
 
 async def project_get(_: web.Request) -> web.Response:
-    project = load_project()
+    registry = load_registry()
+    project = registry.get("projects", {}).get(registry.get("activeProjectId"))
     if project is None:
         try:
             project = default_project(await discovery_model())
         except Exception:
             LOGGER.exception("Could not generate the initial project")
             project = default_project({"areas": []})
+        registry["projects"][project["id"]] = project
+        registry["activeProjectId"] = project["id"]
+        save_registry(registry)
     return web.json_response(project)
 
 
+async def projects_get(_: web.Request) -> web.Response:
+    registry = load_registry()
+    projects = [project_summary(item) for item in registry["projects"].values()]
+    return web.json_response({"revision": registry["revision"], "activeProjectId": registry.get("activeProjectId"), "projects": projects})
+
+
+async def project_by_id(request: web.Request) -> web.Response:
+    registry = load_registry()
+    project = registry["projects"].get(request.match_info["project_id"])
+    if not project:
+        raise web.HTTPNotFound(text="Project not found")
+    return web.json_response(project)
+
+
+async def project_create(request: web.Request) -> web.Response:
+    body = await request.json()
+    name = str(body.get("name") or "Dashboard חדש")[:80]
+    project_id = project_slug(str(body.get("id") or name))
+    registry = load_registry()
+    while project_id in registry["projects"]:
+        project_id = f"{project_id[:38]}-{uuid.uuid4().hex[:6]}"
+    try:
+        project = default_project(await discovery_model())
+    except Exception:
+        project = default_project({"areas": []})
+    project.update({"id": project_id, "name": name, "status": "draft", "revision": 1, "template": body.get("template", "balanced"), "setupComplete": False})
+    registry["projects"][project_id] = project
+    registry["activeProjectId"] = project_id
+    save_registry(registry)
+    return web.json_response(project, status=201)
+
+
+async def project_duplicate(request: web.Request) -> web.Response:
+    registry = load_registry()
+    source = registry["projects"].get(request.match_info["project_id"])
+    if not source:
+        raise web.HTTPNotFound(text="Project not found")
+    clone = json.loads(json.dumps(source))
+    clone["id"] = f"{project_slug(str(source.get('id', 'dashboard')))[:38]}-{uuid.uuid4().hex[:6]}"
+    clone["name"] = f"{source.get('name', 'Dashboard')} · עותק"
+    clone["status"] = "draft"
+    clone["revision"] = 1
+    clone["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    clone.pop("published", None)
+    registry["projects"][clone["id"]] = clone
+    registry["activeProjectId"] = clone["id"]
+    save_registry(registry)
+    return web.json_response(clone, status=201)
+
+
 async def runtime_project(_: web.Request) -> web.Response:
+    request = _
+    registry = load_registry()
+    project_id = request.query.get("projectId") or registry.get("activeProjectId")
+    project = registry.get("projects", {}).get(project_id)
+    if project and isinstance(project.get("published"), dict):
+        return web.json_response(project["published"])
     try:
         value = json.loads(PUBLISHED_PROJECT.read_text(encoding="utf-8"))
         if not isinstance(value, dict):
@@ -212,16 +322,34 @@ async def project_put(request: web.Request) -> web.Response:
     value = await request.json()
     if not isinstance(value, dict) or value.get("schemaVersion") != 2 or not isinstance(value.get("areas"), dict):
         raise web.HTTPBadRequest(text="Invalid HOMEiiOS project")
-    current = load_project()
+    registry = load_registry()
+    project_id = request.match_info.get("project_id") or str(value.get("id") or registry.get("activeProjectId") or "")
+    current = registry["projects"].get(project_id)
     expected = int(value.get("revision", 0))
     if current and expected != int(current.get("revision", 0)):
         return web.json_response({"error": "revision_conflict", "currentRevision": current.get("revision")}, status=409)
     value["revision"] = expected + 1
     value["updatedAt"] = datetime.now(timezone.utc).isoformat()
-    save_json(PROJECT, value)
+    value["id"] = project_id
+    registry["projects"][project_id] = value
+    registry["activeProjectId"] = project_id
     if value.get("status") == "published":
-        save_json(PUBLISHED_PROJECT, value)
+        value["published"] = {key: item for key, item in value.items() if key != "published"}
+    save_registry(registry)
     return web.json_response(value)
+
+
+async def project_archive(request: web.Request) -> web.Response:
+    registry = load_registry()
+    project = registry["projects"].get(request.match_info["project_id"])
+    if not project:
+        raise web.HTTPNotFound(text="Project not found")
+    project["archived"] = True
+    project["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    if registry.get("activeProjectId") == project["id"]:
+        registry["activeProjectId"] = next((key for key, item in registry["projects"].items() if key != project["id"] and not item.get("archived")), None)
+    save_registry(registry)
+    return web.json_response({"archived": True, "id": project["id"]})
 
 
 def migration_summary(value: Any) -> dict[str, Any]:
@@ -297,6 +425,12 @@ app.router.add_get("/api/health", health)
 app.router.add_get("/api/bootstrap", bootstrap)
 app.router.add_get("/api/discovery", discovery)
 app.router.add_get("/api/project", project_get)
+app.router.add_get("/api/projects", projects_get)
+app.router.add_post("/api/projects", project_create)
+app.router.add_get("/api/projects/{project_id}", project_by_id)
+app.router.add_put("/api/projects/{project_id}", project_put)
+app.router.add_post("/api/projects/{project_id}/duplicate", project_duplicate)
+app.router.add_delete("/api/projects/{project_id}", project_archive)
 app.router.add_get("/api/runtime-project", runtime_project)
 app.router.add_put("/api/project", project_put)
 app.router.add_post("/api/migration/preview", migration_preview)
