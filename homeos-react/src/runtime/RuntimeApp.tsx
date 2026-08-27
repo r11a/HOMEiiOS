@@ -66,6 +66,20 @@ export function RuntimeApp({ hass, narrow }: { hass?: HomeAssistant; narrow: boo
     return () => { cancelled = true; };
   }, [hass?.callWS, hass?.user?.id, hass?.user?.is_admin]);
 
+  useEffect(() => {
+    if (!hass?.callWS) return;
+    const refreshAreas = async () => {
+      try {
+        const nextDiscovery = await hass.callWS?.<Discovery>({ type: "homeii/discovery/get" });
+        if (nextDiscovery) setDiscovery(nextDiscovery);
+      } catch {
+        // Preserve the current UI during short HA reconnects.
+      }
+    };
+    const timer = window.setInterval(() => { void refreshAreas(); }, 30_000);
+    return () => window.clearInterval(timer);
+  }, [hass?.callWS]);
+
   const area = discovery?.areas.find((candidate) => candidate.area_id === selectedArea);
   const generatedArea = selectedArea ? project?.areas[selectedArea] : undefined;
   const liveEntities = useMemo(() => area?.entities.map((entity) => hass?.states[entity.entity_id] ?? entity) ?? [], [area, hass?.states]);

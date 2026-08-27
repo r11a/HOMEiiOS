@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0-alpha.2
+
+- Fix the Ingress Studio module path so the bundled control plane loads from the App's authenticated `/assets` route instead of returning a blank shell.
+
 ## 0.4.0-alpha.1
 
 - Make the HOMEii Integration the single project source of truth.

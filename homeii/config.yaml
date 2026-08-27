@@ -1,5 +1,5 @@
 name: HOMEiiOS Alpha
-version: "0.4.0-alpha.1"
+version: "0.4.0-alpha.2"
 slug: homeii
 description: HOMEii Studio control plane for the native Home Assistant dashboard runtime
 url: https://github.com/r11a/HOMEiiOS

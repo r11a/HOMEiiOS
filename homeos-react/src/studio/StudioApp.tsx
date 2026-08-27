@@ -37,6 +37,18 @@ export function StudioApp() {
   }
   useEffect(() => { void load(); }, []);
 
+  useEffect(() => {
+    const refreshAreaNames = async () => {
+      try {
+        setDiscovery(await api<Discovery>("discovery"));
+      } catch {
+        // Keep the last good registry snapshot while HA or Ingress reconnects.
+      }
+    };
+    const timer = window.setInterval(() => { void refreshAreaNames(); }, 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   async function generate() {
     if (!active) return;
     setSaving(true);
@@ -61,15 +73,16 @@ export function StudioApp() {
   }
 
   const area = project?.areas[selectedArea];
+  const areaName = (areaId: string, fallback?: string) => discovery?.areas.find((item) => item.area_id === areaId)?.name ?? fallback ?? areaId;
   const entityCount = useMemo(() => Object.values(project?.areas ?? {}).reduce((sum, item) => sum + item.widgets.reduce((inner, widget) => inner + widget.entityIds.length, 0), 0), [project]);
 
   if (!project) return <main className="studio-empty" dir="rtl"><div className="studio-logo">H</div><small>HOMEii CONTROL PLANE</small><h1>ניצור את הדשבורד הראשון שלך</h1><p>{discovery?.areas.length ?? 0} Areas נמצאו ב־Home Assistant. ה־Integration יבחר Widgets מתאימים וישמור Project מסונכרן.</p><button disabled={saving || !active} onClick={generate}>{saving ? "יוצר…" : "צור HOMEii אוטומטית"}</button><span>{status}</span></main>;
 
   return <main className="studio-shell" dir="rtl">
     <header className="studio-topbar"><div className="studio-logo">H</div><div><small>HOMEii STUDIO</small><strong>{project.name}</strong></div><div className="studio-status"><i />{status}</div><a href="/homeii">פתח Dashboard</a><button disabled={saving} onClick={save}>{saving ? "שומר…" : "פרסם שינויים"}</button></header>
-    <aside className="studio-sidebar"><h2>Areas</h2>{Object.values(project.areas).map((item) => <button className={selectedArea === item.areaId ? "active" : ""} onClick={() => setSelectedArea(item.areaId)} key={item.areaId}><span>{item.title}</span><small>{item.widgets.length} Widgets</small></button>)}</aside>
+    <aside className="studio-sidebar"><h2>Areas</h2>{Object.values(project.areas).map((item) => <button className={selectedArea === item.areaId ? "active" : ""} onClick={() => setSelectedArea(item.areaId)} key={item.areaId}><span>{areaName(item.areaId, item.title)}</span><small>{item.widgets.length} Widgets</small></button>)}</aside>
     <section className="studio-canvas">
-      <div className="studio-hero" style={area?.picture ? { backgroundImage: `linear-gradient(90deg,#111d,#1113),url(${area.picture})` } : undefined}><small>AREA PREVIEW</small><h1>{area?.title}</h1><span>{area?.widgets.reduce((sum, widget) => sum + widget.entityIds.length, 0)} ישויות מחוברות</span></div>
+      <div className="studio-hero" style={area?.picture ? { backgroundImage: `linear-gradient(90deg,#111d,#1113),url(${area.picture})` } : undefined}><small>AREA PREVIEW</small><h1>{area ? areaName(area.areaId, area.title) : ""}</h1><span>{area?.widgets.reduce((sum, widget) => sum + widget.entityIds.length, 0)} ישויות מחוברות</span></div>
       <div className="studio-widgets">{area?.widgets.map((widget) => <article key={widget.id}><div className="widget-icon">{widgetLabels[widget.widgetType]?.[0] ?? "H"}</div><div><strong>{widgetLabels[widget.widgetType] ?? widget.widgetType}</strong><small>{widget.entityIds.length} ישויות · {widget.size}</small></div><select value={widget.size} onChange={(event) => updateArea(area.areaId, (current) => ({ ...current, widgets: current.widgets.map((item) => item.id === widget.id ? { ...item, size: event.target.value as Widget["size"] } : item) }))}><option value="compact">קומפקטי</option><option value="regular">רגיל</option><option value="expanded">מורחב</option></select><button onClick={() => updateArea(area.areaId, (current) => ({ ...current, widgets: current.widgets.filter((item) => item.id !== widget.id) }))}>הסר</button></article>)}</div>
     </section>
     <aside className="studio-inspector"><h2>עיצוב גלובלי</h2><label>שם הדשבורד<input value={project.name} onChange={(event) => setProject({ ...project, name: event.target.value })} /></label><label>ערכת בסיס<select value={project.theme.preset} onChange={(event) => setProject({ ...project, theme: { ...project.theme, preset: event.target.value } })}><option value="granite">Granite</option><option value="night-blue">Night Blue</option><option value="rich-brown">Rich Brown</option><option value="ivory">Ivory</option></select></label><label>צבע הדגשה<input type="color" value={String(project.theme.tokens.accent ?? "#d6a45d")} onChange={(event) => setProject({ ...project, theme: { ...project.theme, tokens: { ...project.theme.tokens, accent: event.target.value } } })} /></label><label>תמונת Hero<input dir="ltr" value={area?.picture ?? ""} onChange={(event) => area && updateArea(area.areaId, (current) => ({ ...current, picture: event.target.value }))} /></label><div className="studio-metrics"><span><b>{Object.keys(project.areas).length}</b> Areas</span><span><b>{entityCount}</b> bindings</span></div></aside>
