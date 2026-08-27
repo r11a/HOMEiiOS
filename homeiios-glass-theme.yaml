@@ -1,0 +1,33 @@
+HOMEiiOS Glass:
+  modes:
+    dark:
+      primary-color: "#A9D0FF"
+      accent-color: "#FFD08A"
+      primary-background-color: "#080D16"
+      secondary-background-color: "#101827"
+      card-background-color: "rgba(14, 20, 31, 0.62)"
+      primary-text-color: "#F7F9FC"
+      secondary-text-color: "rgba(235, 241, 250, 0.64)"
+    light:
+      primary-color: "#356FA8"
+      accent-color: "#B66919"
+      primary-background-color: "#E9EEF4"
+      secondary-background-color: "#F5F7FA"
+      card-background-color: "rgba(255, 255, 255, 0.68)"
+      primary-text-color: "#111827"
+      secondary-text-color: "rgba(17, 24, 39, 0.64)"
+  primary-font-family: "Heebo, Arial, sans-serif"
+  paper-font-common-base_-_font-family: "Heebo, Arial, sans-serif"
+  paper-font-common-code_-_font-family: "Roboto Mono, monospace"
+  ha-card-border-radius: "20px"
+  ha-card-border-width: "0px"
+  ha-card-box-shadow: "0 14px 42px rgba(0, 0, 0, 0.18)"
+  ha-section-border-radius: "24px"
+  ha-section-background-color: "rgba(10, 16, 27, 0.22)"
+  app-header-background-color: "rgba(8, 13, 22, 0.82)"
+  app-header-text-color: "#F7F9FC"
+  divider-color: "rgba(255,255,255,.10)"
+  state-active-color: "#FFD08A"
+  state-inactive-color: "rgba(220,229,241,.48)"
+
+

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>HOMEiiOS Preview</title></head>
+  <body style="margin:0;background:#090e17">
+    <homeiios-panel></homeiios-panel>
+    <script type="module">
+      if (!customElements.get('ha-icon')) customElements.define('ha-icon', class extends HTMLElement {
+        connectedCallback() { this.style.cssText='display:inline-grid;place-items:center;width:24px;height:24px;font-size:13px'; this.textContent='●'; }
+      });
+      await import('/src/panel.tsx');
+      const panel=document.querySelector('homeiios-panel');
+      panel.hass={
+        user:{id:'1',name:'רונן עציל',is_admin:true},
+        states:{
+          'sensor.ims_temperature':{entity_id:'sensor.ims_temperature',state:'27.4',attributes:{}},
+          'sensor.shelly_power_1':{entity_id:'sensor.shelly_power_1',state:'842',attributes:{}},
+          'sensor.intercom_person_count':{entity_id:'sensor.intercom_person_count',state:'0',attributes:{}},
+          'input_boolean.night_mode':{entity_id:'input_boolean.night_mode',state:'off',attributes:{}},
+          'group.all_lights':{entity_id:'group.all_lights',state:'on',attributes:{}}
+        },
+        callService:async()=>{}, navigate:(path)=>console.log(path)
+      };
+    </script>
+  </body>
+</html>

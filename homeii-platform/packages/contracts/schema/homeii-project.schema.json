@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://homeii.local/schema/project-v1.json",
+  "title": "HOMEii Project",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "revision", "id", "name", "brand", "theme", "areas", "permissions"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "revision": {"type": "integer", "minimum": 1},
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{1,63}$"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 80},
+    "brand": {"type": "object", "required": ["name"], "properties": {"name": {"type": "string"}, "logo": {"type": "string"}}, "additionalProperties": false},
+    "theme": {"type": "object", "required": ["mode", "preset", "tokens"], "properties": {"mode": {"enum": ["system", "dark", "light"]}, "preset": {"type": "string"}, "tokens": {"type": "object", "additionalProperties": {"type": ["string", "number"]}}}, "additionalProperties": false},
+    "areas": {"type": "object", "additionalProperties": {"$ref": "#/$defs/area"}},
+    "permissions": {"$ref": "#/$defs/permissions"}
+  },
+  "$defs": {
+    "binding": {"type": "object", "additionalProperties": false, "required": ["id", "areaId", "widgetType", "entityIds", "capabilityQuery", "size", "settings"], "properties": {"id": {"type": "string"}, "areaId": {"type": "string"}, "widgetType": {"type": "string"}, "entityIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}, "capabilityQuery": {"type": "object", "required": ["domain"], "properties": {"domain": {"type": "string"}, "requires": {"type": "array", "items": {"type": "string"}}, "prefers": {"type": "array", "items": {"type": "string"}}}, "additionalProperties": false}, "size": {"enum": ["compact", "regular", "expanded"]}, "settings": {"type": "object"}}},
+    "area": {"type": "object", "additionalProperties": false, "required": ["areaId", "hidden", "widgets"], "properties": {"areaId": {"type": "string"}, "title": {"type": "string"}, "picture": {"type": "string"}, "hidden": {"type": "boolean"}, "widgets": {"type": "array", "items": {"$ref": "#/$defs/binding"}}}},
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defaultRole", "users"],
+      "properties": {
+        "defaultRole": {"enum": ["viewer", "operator", "admin"]},
+        "users": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["role"],
+            "properties": {
+              "role": {"enum": ["viewer", "operator", "admin"]},
+              "areas": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+            }
+          }
+        }
+      }
+    }
+  }
+}

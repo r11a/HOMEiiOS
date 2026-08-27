@@ -1,0 +1,122 @@
+{
+  "homeTitle": "הבית שלנו",
+  "dashboardPath": "/homeiios",
+  "legacyDashboardPath": "/dashboard-clean",
+  "branding": {
+    "logo": "/local/homeiios/homeiios-logo-v2.png",
+    "animation": "spin",
+    "action": {"type":"view","target":"home"}
+  },
+  "appearance": {
+    "themeMode": "system",
+    "densityMode": "comfort",
+    "highContrast": false,
+    "accent": "#f6bd72",
+    "coolAccent": "#a8ceff",
+    "sectionColor": "#111825",
+    "tileColor": "#202a3a",
+    "background": "",
+    "backgroundDim": 22,
+    "surfaceOpacity": 64,
+    "tileOpacity": 58,
+    "darkPalette": "granite",
+    "lightPalette": "ivory",
+    "textColor": "#f5f5f4",
+    "sidebarAccent": "#7fb6ff",
+    "sidebarIconColor": "#cfe6ff",
+    "blur": 24,
+    "radius": 26
+  },
+  "backgrounds": {
+    "home": "/local/homeiios/homeiios-livingroom-warm.png",
+    "livingroom": "/local/homeiios/homeiios-livingroom-warm.png",
+    "entrance": "/local/homeiios/homeiios-kitchen-entry-warm.png",
+    "bedroom": "/local/homeiios/homeiios-bedroom-warm.png",
+    "study": "/local/homeiios/hero-study-bright-v2.png",
+    "bathroom": "/local/homeiios/hero-bathroom-warm-v2.png",
+    "outside": "/local/homeiios/homeiios-outdoor-rooftop-warm.png"
+  },
+  "timeBackgrounds": {
+    "morning": "/local/homeiios/homeiios-livingroom-morning.png",
+    "day": "/local/homeiios/homeiios-livingroom-day.png",
+    "evening": "/local/homeiios/homeiios-livingroom-evening.png",
+    "night": "/local/homeiios/homeiios-livingroom-night.png"
+  },
+  "backgroundPresets": [
+    {"id":"automatic","name":"אוטומטי לפי חדר ושעה","image":""},
+    {"id":"mineral","name":"זכוכית מינרלית","image":"/local/homeiios/background-mineral-glass.png"},
+    {"id":"smoke","name":"כחול עשן","image":"/local/homeiios/background-smoke-blue.png"},
+    {"id":"silk","name":"משי כהה · Calm","image":"/local/homeiios/background-dark-silk.png"},
+    {"id":"sage","name":"מרווה וברונזה · Calm","image":"/local/homeiios/background-sage-bronze.png"},
+    {"id":"calm-stone","name":"אבן רגועה · Calm","image":"/local/homeiios/background-calm-stone.png"},
+    {"id":"vivid-cobalt","name":"קובלט וקורל · Vivid","image":"/local/homeiios/background-vivid-cobalt-coral.png"},
+    {"id":"vivid-emerald","name":"אמרלד וענבר · Vivid","image":"/local/homeiios/background-vivid-emerald-amber.png"}
+  ],
+  "entities": {
+    "temperature": "sensor.ims_temperature",
+    "weather": "weather.ims_weather",
+    "power": "sensor.shelly_power_1",
+    "intercomCount": "sensor.intercom_person_count",
+    "nightMode": "input_boolean.night_mode",
+    "kiosk": "input_boolean.kiosk_full",
+    "allLights": "group.all_lights",
+    "restoreScene": "scene.restor"
+  },
+  "rooms": [
+    {"id":"livingroom","areaIds":["living_room"],"name":"סלון","icon":"mdi:sofa","subtitle":"תאורה · מדיה · מיזוג","legacyPath":"livingroom"},
+    {"id":"entrance","areaIds":["knysh"],"name":"מטבח וכניסה","icon":"mdi:silverware-fork-knife","subtitle":"תאורה · כניסה · אינטרקום","legacyPath":"entrance"},
+    {"id":"bedroom","areaIds":["bedroom"],"name":"חדר שינה","icon":"mdi:bed-king","subtitle":"תאורה · מיזוג · תריסים","legacyPath":"bedroom"},
+    {"id":"study","areaIds":["gm","liad"],"name":"אגם וליעד","icon":"mdi:chair-rolling","subtitle":"תאורה · מיזוג · מחשבים","legacyPath":"study"},
+    {"id":"bathroom","areaIds":["gg_2"],"name":"מקלחת וגג","icon":"mdi:bathtub","subtitle":"דוד · תאורה · גג","legacyPath":"bathroom"},
+    {"id":"outside","areaIds":["khytsvny"],"name":"חיצוני","icon":"mdi:palm-tree","subtitle":"תאורה · השקיה · שערים","legacyPath":"outside"}
+  ],
+  "roomDefinitions": {
+    "livingroom": {
+      "climate": "climate.livingroom",
+      "temperature": "sensor.living_room_temp",
+      "humidity": "sensor.living_room_humidity",
+      "lights": [
+        {"entity":"light.livingroom","name":"תאורה ראשית","icon":"mdi:ceiling-light"},
+        {"entity":"light.ikea_floor","name":"מנורת רצפה","icon":"mdi:floor-lamp"},
+        {"entity":"light.ikea_bulb_gold","name":"מנורת זהב","icon":"mdi:lamp"},
+        {"entity":"light.wall","name":"תאורת קיר","icon":"mdi:wall-sconce-flat"},
+        {"entity":"light.lr_curtain","name":"תאורת וילון","icon":"mdi:led-strip-variant"},
+        {"entity":"light.entrance","name":"מרכז","icon":"mdi:light-recessed"},
+        {"entity":"light.tv_ambilight","name":"תאורת טלוויזיה","icon":"mdi:television-ambient-light"},
+        {"entity":"light.nuc_ambilight","name":"תאורת מסך","icon":"mdi:monitor-shimmer"},
+        {"entity":"light.salon","name":"תאורה מעומעמת","icon":"mdi:lightbulb-night"}
+      ],
+      "media": "media_player.home_theater",
+      "scenes": [
+        {"entity":"scene.normal","name":"רגיל","icon":"mdi:white-balance-sunny"},
+        {"entity":"scene.romantic","name":"רומנטי","icon":"mdi:heart-outline"},
+        {"entity":"scene.night_1","name":"לילה","icon":"mdi:weather-night"},
+        {"entity":"scene.restor","name":"שחזור","icon":"mdi:restore"}
+      ]
+    },
+    "bedroom": {
+      "climate": "climate.bedroom_ac",
+      "lights": [
+        {"entity":"light.bedroom_ceiling","name":"תקרה","icon":"mdi:ceiling-light"},
+        {"entity":"light.socket_bedroom","name":"תאורה ראשית","icon":"mdi:lightbulb"},
+        {"entity":"light.ikea_michal_bed","name":"שידה מיכל","icon":"mdi:lamp"},
+        {"entity":"light.ikea_ronen_bed","name":"שידה רונן","icon":"mdi:lamp"}
+      ],
+      "media": "media_player.bedroom_2",
+      "scenes": []
+    }
+  },
+  "secondary": [
+    {"id":"weather","name":"מזג אוויר","icon":"mdi:weather-partly-cloudy","legacyPath":"weather"},
+    {"id":"media","name":"מדיה","icon":"mdi:play-circle-outline","legacyPath":"ma"},
+    {"id":"security","name":"מצלמות","icon":"mdi:cctv","legacyPath":"cctv"},
+    {"id":"power","name":"אנרגיה","icon":"mdi:transmission-tower","legacyPath":"power"},
+    {"id":"vacuum","name":"שואב","icon":"mdi:robot-vacuum","legacyPath":"roborock"},
+    {"id":"intercom","name":"אינטרקום","icon":"mdi:doorbell-video","legacyPath":"intercom"},
+    {"id":"plan","name":"תוכנית הבית","icon":"mdi:floor-plan","legacyPath":"plan"},
+    {"id":"lights","name":"מרכז תאורה","icon":"mdi:lightbulb-group","legacyPath":"lights-panel"},
+    {"id":"resources","name":"משאבי מערכת","icon":"mdi:cpu-64-bit","legacyPath":"resources"},
+    {"id":"media-players","name":"רמקולים","icon":"mdi:speaker-multiple","legacyPath":"media"},
+    {"id":"advanced-media","name":"מדיה מתקדמת","icon":"mdi:folder-music-outline","legacyPath":"media2"}
+  ]
+}

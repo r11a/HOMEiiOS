@@ -1,0 +1,45 @@
+# Dependencies and build output
+**/node_modules/
+**/dist/
+**/build/
+**/.vite/
+**/.turbo/
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.coverage
+
+# Local environments and secrets
+**/.env
+**/.env.*
+!**/.env.example
+**/secrets.yaml
+**/*secret*.json
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+
+# Home Assistant runtime/private state
+**/.storage/
+**/home-assistant_v2.db*
+**/home-assistant.log*
+**/backups/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Generated local files
+*.tsbuildinfo
+*.local
+coverage/
+playwright-report/
+test-results/

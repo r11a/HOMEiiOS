@@ -1,0 +1,1 @@
+{"name":"@homeii/widget-sdk","version":"0.1.0","private":true,"type":"module","dependencies":{"@homeii/contracts":"0.1.0"},"exports":{".":"./src/index.ts"},"scripts":{"typecheck":"tsc -p tsconfig.json --noEmit"}}

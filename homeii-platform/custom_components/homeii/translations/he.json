@@ -1,0 +1,4 @@
+{
+  "title": "מערכת הדשבורדים HOMEii",
+  "config": {"step": {"user": {"title": "הגדרת HOMEii", "description": "יצירת מערכת HOMEii מרכזית ומסונכרנת.", "data": {"name": "שם ההתקנה"}}}, "abort": {"already_configured": "HOMEii כבר מוגדר."}}
+}

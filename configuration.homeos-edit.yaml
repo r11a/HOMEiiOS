@@ -1,0 +1,289 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+
+# Packages
+homeassistant:
+  customize: !include customize.yaml
+  # packages: !include_dir_named packages
+
+# Proxy 
+http:
+  # server_port: 8123
+  # ssl_certificate: /ssl/fullchain.pem
+  # ssl_key: /ssl/privkey.pem
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.30.32.0/23
+    - 127.0.0.1
+    # - 192.168.1.0/24
+
+
+# Browser_mod
+browser_mod:
+
+# IR Broadlink
+smartir:
+
+# Livingroom Broadlink Air Conditioner
+climate:
+  - platform: smartir
+    name: living room ac
+    unique_id: livingroom_ac
+    device_code: 1960
+    controller_data: remote.rm_pro
+    temperature_sensor: sensor.living_room_temp
+    humidity_sensor: sensor.living_room_humidity
+    power_sensor: binary_sensor.lr_ac_magnet
+
+# Database
+recorder:
+  db_url: mysql://homeassistant:Ronen55258333@core-mariadb/homeassistant?charset=utf8mb4
+
+  exclude:
+    entities:
+      - sensor.rotter
+      - sensor.ynet
+      - automation.nspanel_configuration_blueprint
+      - sensor.boiler_on_time
+      - sensor.car_charging_time
+      - sensor.car_charger_power
+      - sensor.memory_free
+      - sensor.memory_use
+      - sensor.memory_use_percent
+      - sensor.nspanel_temperature
+      - sensor.nspanel_2_temperature
+      - sensor.temt6000_illuminance
+      - sensor.liad_atsil_next_update
+      - sensor.ronen_atsil_info
+      - sensor.living_room_humidity_2
+      - sensor.living_room_temperature
+      - sensor.bed_room_temperature
+# Telegram Bot
+# telegram_bot:
+  # - platform: polling
+    # api_key: <redacted-use-secrets.yaml>
+    # allowed_chat_ids:
+      # - -515609272
+      # - 529416502
+      
+# entry for the telegram notifier
+notify:
+  - platform: telegram
+    name: telegram_group
+    chat_id: -515609272
+
+
+
+
+# Example configuration.yaml entry for Google TTS service
+tts:
+  - platform: google_translate
+
+media_player: 
+  - platform: emby
+    host: 192.168.1.171
+    api_key: !secret emby_api_key
+    
+
+
+
+# Themes Support
+
+# template: !include sidebar.yaml
+# Themes Support
+frontend:
+  extra_module_url:
+    - /config/www/custom_ui/card-mod.js
+    - /hacsfiles/Bubble-Card/bubble-pop-up.js
+    - /local/loadfonts.js
+  themes: !include_dir_merge_named themes
+
+
+
+
+
+# split to files 
+group: !include groups.yaml
+template: !include template.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+sensor: !include sensor.yaml
+binary_sensor: !include binary_sensors.yaml
+switch: !include switch.yaml
+
+# Wake on lan
+wake_on_lan:
+
+# Roborock_S7
+# camera:
+#   - platform: xiaomi_cloud_map_extractor
+#     host: !secret xiaomi_vacuum_host
+#     token: !secret xiaomi_vacuum_token
+#     username: !secret xiaomi_cloud_username
+#     password: !secret xiaomi_cloud_password
+#     scan_interval: 30
+#     auto_update: false
+#     country: sg
+#     draw: ['all']
+#     attributes:
+#       - calibration_points
+#       - rooms
+#       - path
+#       - goto_path
+#     colors:
+#       color_map_inside: [32, 115, 185]
+#       color_map_outside: [29, 29, 29]
+#       color_map_wall: [96, 96, 96]
+#     map_transformation:
+#       rotate: 90
+#       scale: 1
+#       trim:
+#         top: 21
+#         bottom: 22
+#         left: 12
+#         right: 17
+
+
+
+light:
+  - platform: template
+    lights:
+      livingroom_active:
+        friendly_name: "livingroom_active"
+        level_template: >
+          {% set data = namespace(numbers=[]) %}
+          {% for s in state_attr('group.living_room_dim', 'entity_id') %}
+            {% if is_state(s, 'on') %}
+              {% set data.numbers = [state_attr(s, "brightness")] + data.numbers %}
+            {% endif %}
+          {% endfor %}
+          {{data.numbers|average|round(0)}}
+        value_template: >
+          {%- set data = namespace(res="off") -%}
+          {% for s in state_attr('group.living_room_dim', 'entity_id') %}
+            {% if is_state(s, 'on') %}
+              {%- set data.res = "on" -%}
+            {% endif %}
+          {%- endfor -%}
+          {{data.res}}
+        temperature_template: >
+          {% set data = namespace(numbers=[]) %}
+          {% for s in state_attr('group.living_room_dim', 'entity_id') %}
+            {% if state_attr(s, "color_temp") %}
+              {% set data.numbers = [state_attr(s, "color_temp")] + data.numbers %}
+            {% endif %}
+          {% endfor %}
+          {{data.numbers|average|round(0)}}
+        turn_on:
+          - action: light.turn_on
+            data:
+              entity_id: group.living_room_dim
+        turn_off:
+          - action: light.turn_off
+            data:
+              entity_id: group.living_room_dim
+        set_level:
+          - action: light.turn_on
+            target:
+              # wat te doen als alles uit staat? If statement om alles aan te zetten
+              entity_id: "{{ expand('group.living_room_dim') | selectattr('state','eq','on') | map(attribute='entity_id') | join(',') }}"
+            data:
+              brightness: "{{ brightness }}"
+        set_temperature:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ expand('group.living_room_dim') | selectattr('state','eq','on') | map(attribute='entity_id') | join(',') }}"
+            data:
+              color_temp: "{{ color_temp }}"
+
+keyboard_remote:
+  device_descriptor: '/dev/input/event3' 
+  type: "key_down"
+  emulate_key_hold: true
+  emulate_key_hold_delay: 0.25
+  emulate_key_hold_repeat: 2.0
+
+powercalc:
+  
+# Arylic Linkplay Media Player
+#         uuid: FF31F09E45CD93DB42919EBE - bedroom
+#         uuid: FF31F09E019E9C0DB3C7C8F9 - bathroom
+# media_player:
+#  - platform: linkplay
+#    host: 192.168.1.140
+#    uuid: FF31F09E45CD93DB42919EBE
+#    name: Sound Room1
+#    volume_step: 5
+#    icecast_metadata: "StationNameSongTitle"
+#    multiroom_wifidirect: False
+#    lastfm_api_key: !secret lastfm_api_key
+#  - platform: linkplay
+#    host: 192.168.1.141
+#    uuid: FF31F09E019E9C0DB3C7C8F9
+#    name: Sound Room2
+#    volume_step: 5
+#    icecast_metadata: "StationNameSongTitle"
+#    multiroom_wifidirect: False
+#    lastfm_api_key: !secret lastfm_api_key
+#  - platform: linkplay
+#    host: 192.168.1.142
+#    uuid: FF31F09EE21204C2F3A7345F
+#    name: Sound Room3
+#    volume_step: 5
+#    icecast_metadata: "StationNameSongTitle"
+#    multiroom_wifidirect: False
+#    lastfm_api_key: !secret lastfm_api_key
+#  - platform: linkplay
+#  %   host: 192.168.1.143
+#    uuid: FF31F09EFFC06573C461463E
+#    name: Sound Room4
+#    volume_step: 5
+#    icecast_metadata: "StationNameSongTitle"
+#    multiroom_wifidirect: False
+#    lastfm_api_key: !secret lastfm_api_key
+
+
+
+
+
+# Added By Homeway to enable Alexa support.
+alexa:
+  smart_home:
+
+# Added By Homeway to enable Google Assistant support.
+google_assistant:
+  project_id: homewayio
+  service_account:
+    private_key: "nokey"
+    client_email: "support@homeway.io"
+
+
+# Added by Homeway to enable webrtc video streaming. Prevent Homeway from updating web_rtc by setting following to false: homeway_auto_update:true
+web_rtc:
+  ice_servers:
+    - url:
+        - "stun:stun.cloudflare.com:3478"
+        - "stun:stun.cloudflare.com:53"
+        - "stun:webrtc.homeway.io:443"
+    - url:
+        - "turn:webrtc.homeway.io:443?transport=udp"
+        - "turn:webrtc.homeway.io:3478?transport=udp"
+        - "turn:webrtc.homeway.io:3478?transport=tcp"
+        - "turn:webrtc.homeway.io:80?transport=tcp"
+        - "turns:webrtc.homeway.io:443?transport=tcp"
+        - "turns:webrtc.homeway.io:5349?transport=tcp"
+      username: "AMU7AQQDGXKEBCUSH0ELOH9V98EPLFBUBJUMTK0CBD5VXNFNG7O38GTGOL0E-1"
+      credential: "C1AC70A8DFCC77F64D2E122D7CBA33AD9B5C007A0B56A8CB861AAC87C6BF8BC3"
+
+# HomeOS Glass dashboard
+lovelace:
+  dashboards:
+    homeos-dashboard:
+      mode: yaml
+      title: HomeOS
+      icon: mdi:home-heart
+      show_in_sidebar: true
+      require_admin: false
+      filename: homeos-v1.yaml

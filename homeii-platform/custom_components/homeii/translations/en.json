@@ -1,0 +1,4 @@
+{
+  "title": "HOMEii Dashboard Platform",
+  "config": {"step": {"user": {"title": "Set up HOMEii", "description": "Create the synchronized HOMEii dashboard platform.", "data": {"name": "Installation name"}}}, "abort": {"already_configured": "HOMEii is already configured."}}
+}
