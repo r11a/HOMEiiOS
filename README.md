@@ -43,6 +43,20 @@ migration and responsive test gates pass.
 
 Architecture details: [homeii-platform/docs/ARCHITECTURE.md](homeii-platform/docs/ARCHITECTURE.md).
 
+## Install the HAOS Alpha
+
+HOMEiiOS currently ships as an experimental administrator-only HAOS app.
+
+1. In Home Assistant open **Settings → Apps → App store**.
+2. Open the repository menu and add `https://github.com/r11a/HOMEiiOS`.
+3. Install **HOMEiiOS Alpha**.
+4. Start it, then select **Open Web UI** or open **HOMEiiOS** in the sidebar.
+
+The first install builds the container on the HAOS host and can take several
+minutes. This Alpha validates Ingress, live state updates, service actions and
+responsive rendering. Central Area synchronization and server-side visual
+editor persistence are still under active development.
+
 ## Security
 
 Never commit Home Assistant secrets, access tokens, API keys, private URLs or

@@ -43,3 +43,5 @@ desktop.ini
 coverage/
 playwright-report/
 test-results/
+.github-cli/
+*.bundle

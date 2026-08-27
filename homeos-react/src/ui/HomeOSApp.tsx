@@ -30,10 +30,19 @@ function displayState(value: HassEntity | undefined, suffix = "") {
 
 async function readConfig(): Promise<HomeOSConfig> {
   try {
-    const configPath = location.port === "5173" ? "/config.json" : "/local/homeiios-app/config.json";
+    const ingress = location.pathname.includes("/api/hassio_ingress/");
+    const configPath = location.port === "5173" ? "/config.json" : ingress ? "./assets/config.json" : "/local/homeiios-app/config.json";
     const response = await fetch(`${configPath}?t=${Date.now()}`, { cache: "no-store" });
     if (!response.ok) throw new Error(String(response.status));
-    return { ...defaultConfig, ...(await response.json()) };
+    const loaded = await response.json();
+    if (ingress) {
+      const localAsset = (value: string) => value.replace(/^\/local\/homeiios(?:-app)?\//, "./assets/");
+      loaded.branding.logo = localAsset(loaded.branding.logo);
+      Object.keys(loaded.backgrounds).forEach((key) => loaded.backgrounds[key] = localAsset(loaded.backgrounds[key]));
+      Object.keys(loaded.timeBackgrounds).forEach((key) => loaded.timeBackgrounds[key] = localAsset(loaded.timeBackgrounds[key]));
+      loaded.backgroundPresets.forEach((preset: { image: string }) => preset.image = localAsset(preset.image));
+    }
+    return { ...defaultConfig, ...loaded };
   } catch {
     return defaultConfig;
   }
