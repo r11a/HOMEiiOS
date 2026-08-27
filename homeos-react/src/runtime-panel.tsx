@@ -5,6 +5,11 @@ import { RuntimeApp } from "./runtime/RuntimeApp";
 import styles from "./runtime/runtime.css?inline";
 import widgetStyles from "./runtime/widgets.css?inline";
 import signatureStyles from "./runtime/signature.css?inline";
+import premiumWidgetStyles from "./runtime/widgets-premium.css?inline";
+import { StudioApp } from "./studio/StudioApp";
+import studioStyles from "./studio/studio.css?inline";
+import designSystem from "./studio/design-system.css?inline";
+import editorStyles from "./studio/editor.css?inline";
 
 class HomeiiPanel extends HTMLElement {
   private root: Root;
@@ -16,7 +21,7 @@ class HomeiiPanel extends HTMLElement {
     const shadow = this.attachShadow({ mode: "open" });
     const style = document.createElement("style");
     const mount = document.createElement("div");
-    style.textContent = `${styles}\n${widgetStyles}\n${signatureStyles}`;
+    style.textContent = `${styles}\n${widgetStyles}\n${premiumWidgetStyles}\n${signatureStyles}`;
     shadow.append(style, mount);
     this.root = createRoot(mount);
   }
@@ -38,3 +43,14 @@ class HomeiiPanel extends HTMLElement {
 }
 
 if (!customElements.get("homeii-panel")) customElements.define("homeii-panel", HomeiiPanel);
+
+class HomeiiStudioPanel extends HTMLElement {
+  private root: Root;
+  private _hass?: HomeAssistant;
+  constructor() { super(); const shadow=this.attachShadow({mode:"open"}); const style=document.createElement("style"); const mount=document.createElement("div"); style.textContent=`${studioStyles}\n${designSystem}\n${editorStyles}`; shadow.append(style,mount); this.root=createRoot(mount); }
+  set hass(value: HomeAssistant) { this._hass=value; this.renderPanel(); }
+  connectedCallback() { this.renderPanel(); }
+  disconnectedCallback() { this.root.unmount(); }
+  private renderPanel() { this.root.render(<StudioApp hass={this._hass}/>); }
+}
+if (!customElements.get("homeii-studio-panel")) customElements.define("homeii-studio-panel", HomeiiStudioPanel);

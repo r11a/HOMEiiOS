@@ -9,6 +9,7 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import HomeAssistant
 
 PANEL_PATH = "homeii"
+STUDIO_PANEL_PATH = "homeii-studio"
 PANEL_URL = "/homeii_static/homeii-panel.js"
 PANEL_FILE = Path(__file__).parent / "frontend" / "homeii-panel.js"
 
@@ -38,9 +39,24 @@ async def async_register_frontend(hass: HomeAssistant) -> None:
         handle_safe_area=True,
         config={"runtime": "native", "version": 1},
     )
+    if frontend.async_panel_exists(hass, STUDIO_PANEL_PATH):
+        frontend.async_remove_panel(hass, STUDIO_PANEL_PATH)
+    await panel_custom.async_register_panel(
+        hass,
+        frontend_url_path=STUDIO_PANEL_PATH,
+        webcomponent_name="homeii-studio-panel",
+        sidebar_title="HOMEii Studio",
+        sidebar_icon="mdi:palette-swatch-variant",
+        module_url=PANEL_URL,
+        require_admin=True,
+        handle_safe_area=True,
+        config={"runtime": "studio", "version": 1},
+    )
 
 
 def async_unregister_frontend(hass: HomeAssistant) -> None:
     """Remove the sidebar panel when the integration unloads."""
     if frontend.async_panel_exists(hass, PANEL_PATH):
         frontend.async_remove_panel(hass, PANEL_PATH)
+    if frontend.async_panel_exists(hass, STUDIO_PANEL_PATH):
+        frontend.async_remove_panel(hass, STUDIO_PANEL_PATH)

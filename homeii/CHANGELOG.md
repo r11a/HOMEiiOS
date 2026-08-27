@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0-alpha.1
+
+- Adds the HA-native, admin-only HOMEii Studio panel alongside the Add-on control plane.
+- Adds visual widget library, Area-aware entity binding, drag-and-drop ordering, sizing, duplicate/delete and undo/redo.
+- Adds visual Home Assistant card creation for Tile, Entities, Thermostat, Media Control, Picture Entity, Gauge and Sensor cards without YAML or JSON.
+- Uses Home Assistant's native entity picker when Studio runs inside HA.
+- Adds premium domain widgets for lights with dimming, covers and alarm control panels.
+- Adds visual widget inspector and preserves all edits in the synchronized Project document.
+
 ## 0.5.0-alpha.1
 
 - Adds the first formal dashboard template: HOMEii Signature.
