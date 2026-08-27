@@ -74,6 +74,31 @@ class HomeiiStore:
         await self._store.async_save(self.data)
         return deepcopy(self.data)
 
+    async def async_upsert_project(
+        self,
+        project: dict[str, Any],
+        expected_revision: int,
+        activate: bool = True,
+    ) -> dict[str, Any]:
+        """Create or replace one project and optionally activate it atomically."""
+        if expected_revision != self.data["revision"]:
+            raise ValueError("revision_conflict")
+        project_id = project.get("id")
+        if not isinstance(project_id, str) or not project_id:
+            raise ValueError("invalid_project")
+        next_value = deepcopy(self.data)
+        next_value["projects"][project_id] = deepcopy(project)
+        if activate:
+            next_value["global"]["active_project_id"] = project_id
+        next_value["revision"] += 1
+        self.data = self._normalize(next_value)
+        await self._store.async_save(self.data)
+        return {
+            "revision": self.data["revision"],
+            "active_project_id": self.data["global"].get("active_project_id"),
+            "project": deepcopy(self.data["projects"][project_id]),
+        }
+
     @staticmethod
     def _normalize(value: dict[str, Any]) -> dict[str, Any]:
         """Apply safe defaults without discarding future keys."""

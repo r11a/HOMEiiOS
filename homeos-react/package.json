@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/generate-mdi-icons.mjs && vite build --configLoader native && node scripts/audit-browser-bundle.mjs",
+    "build:runtime": "vite build --config vite.runtime.config.ts --configLoader native",
+    "build:studio": "vite build --config vite.studio.config.ts --configLoader native",
     "dev": "vite"
   },
   "dependencies": {

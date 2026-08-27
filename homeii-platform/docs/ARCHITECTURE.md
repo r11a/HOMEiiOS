@@ -41,6 +41,8 @@ tests/                security and cross-layer contract tests
 
 No package may import from an app. Widgets may depend only on `contracts`, `design-system`, `widget-sdk` and `ha-client`.
 
+AI providers are optional Studio adapters. They can propose validated project operations but cannot render runtime code, bypass revision checks, grant permissions or execute HA services. See ADR-0004.
+
 ## Configuration precedence
 
 ```text
@@ -96,6 +98,12 @@ Components use container queries and semantic size classes (`compact`, `regular`
 `YAML → safe AST → HOMEii IR → Area matching → widget adapters → preview → admin approval → persisted project`
 
 Templates and unknown custom card settings are treated as inert data and never executed during import. Unsupported cards are preserved as `legacy.lovelace-card` with a warning. The preview reports mapping confidence, unmatched views, missing entities and external dependencies. Only an HA administrator can preview or approve a migration.
+
+## Generation pipeline
+
+`HA permission filter → registry discovery → Area grouping → capability/domain adapters → generic fallback → project preview → admin publish`
+
+Generation is deterministic and side-effect free. Preview never persists a project. Every entity visible to HOMEii must first pass Home Assistant's own read permission check; HOMEii policies may restrict the result further but may not widen it.
 
 ## Quality gates
 

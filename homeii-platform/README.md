@@ -16,6 +16,7 @@ HAOS-first product foundation for a synchronized, editable and auto-generated Ho
 - `homeii/config/get`: authenticated configuration read.
 - `homeii/discovery/get`: live Area/Device/Entity model.
 - `homeii/config/patch`: administrator-only atomic patch with revision conflict protection.
+- `homeii/project/preview`: administrator-only deterministic Area-first project generation without persistence.
 
 ## Configuration hierarchy
 
@@ -32,10 +33,16 @@ The App owns projects/assets/backups. The integration bridge owns HA-aware globa
 - Unknown future configuration keys are preserved.
 - Existing HOMEii dashboard files are not modified by this prototype.
 
+## Current foundation
+
+- HA entity read permissions are applied before discovery data leaves Home Assistant.
+- The first Area-first generator maps known domains to rich widget types and preserves unknown domains through `entity.generic`.
+- Generated previews are deterministic and do not mutate the installation.
+
 ## Next implementation milestone
 
-1. Connect the React Control Center to the WebSocket API.
-2. Add the onboarding wizard and suggested room templates.
-3. Introduce the domain widget registry and capability-based controls.
-4. Add migration from current `config.json` and browser profiles.
-5. Package and validate the HAOS repository on amd64 and aarch64 before expanding architectures.
+1. Package a self-contained HA custom panel and connect it to the WebSocket API.
+2. Render the generated preview with live HA state and a lossless HA card host.
+3. Add draft/publish project persistence with revision history.
+4. Introduce capability adapters beyond the initial domain mapping.
+5. Add migration from current `config.json` and browser profiles.

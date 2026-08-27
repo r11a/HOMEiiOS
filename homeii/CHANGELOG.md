@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0-alpha.1
+
+- Make the HOMEii Integration the single project source of truth.
+- Add an allow-listed Add-on bridge to the Integration WebSocket API.
+- Replace the legacy Ingress dashboard with the first synchronized HOMEii Studio.
+- Edit Area pictures, theme tokens, widget sizes and visibility, then publish to every native dashboard client.
+
 ## 0.3.0-alpha.2
 
 - Recover the existing Alpha dashboard when a 0.3 Project Registry exists but

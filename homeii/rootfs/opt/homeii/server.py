@@ -412,6 +412,57 @@ async def frontend_error(request: web.Request) -> web.Response:
     return web.json_response({"reported": True})
 
 
+async def platform_command(command: dict[str, Any]) -> tuple[int, Any]:
+    """Call one allow-listed HOMEii Integration command through HA WebSocket."""
+    command_type = str(command.get("type", ""))
+    if command_type not in {
+        "homeii/config/get", "homeii/config/patch", "homeii/discovery/get",
+        "homeii/project/active", "homeii/project/preview", "homeii/project/generate",
+    }:
+        return 403, {"error": "command_not_allowed"}
+    try:
+        return 200, (await core_ws([command]))[0]
+    except Exception as error:
+        LOGGER.exception("HOMEii Integration command failed: %s", command_type)
+        return 502, {"error": "integration_unavailable", "detail": str(error)}
+
+
+async def platform_active(_: web.Request) -> web.Response:
+    status, result = await platform_command({"type": "homeii/project/active"})
+    return web.json_response(result, status=status)
+
+
+async def platform_discovery(_: web.Request) -> web.Response:
+    status, result = await platform_command({"type": "homeii/discovery/get"})
+    return web.json_response(result, status=status)
+
+
+async def platform_generate(request: web.Request) -> web.Response:
+    body = await request.json()
+    status, result = await platform_command({
+        "type": "homeii/project/generate",
+        "project_id": str(body.get("project_id", "home")),
+        "name": str(body.get("name", "My HOMEii")),
+        "template": str(body.get("template", "area-first")),
+        "revision": int(body.get("revision", 0)),
+    })
+    return web.json_response(result, status=status)
+
+
+async def platform_patch(request: web.Request) -> web.Response:
+    body = await request.json()
+    path = body.get("path")
+    if not isinstance(path, list) or not path or any(not isinstance(part, str) for part in path):
+        raise web.HTTPBadRequest(text="Invalid configuration path")
+    status, result = await platform_command({
+        "type": "homeii/config/patch",
+        "path": path,
+        "value": body.get("value"),
+        "revision": int(body.get("revision", 0)),
+    })
+    return web.json_response(result, status=status)
+
+
 async def index(_: web.Request) -> web.FileResponse:
     return web.FileResponse(WWW / "index.html")
 
@@ -419,7 +470,7 @@ async def index(_: web.Request) -> web.FileResponse:
 @web.middleware
 async def no_cache_boot_files(request: web.Request, handler: Any) -> web.StreamResponse:
     response = await handler(request)
-    if request.path == "/" or request.path.endswith(("bridge.js", "homeiios-panel.js", "config.json")):
+    if request.path == "/" or request.path.endswith(("bridge.js", "homeiios-panel.js", "homeii-studio.js", "config.json")):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     return response
 
@@ -440,6 +491,10 @@ app.router.add_put("/api/project", project_put)
 app.router.add_post("/api/migration/preview", migration_preview)
 app.router.add_post("/api/services/{domain}/{service}", service)
 app.router.add_post("/api/frontend-error", frontend_error)
+app.router.add_get("/api/platform/active", platform_active)
+app.router.add_get("/api/platform/discovery", platform_discovery)
+app.router.add_post("/api/platform/generate", platform_generate)
+app.router.add_patch("/api/platform/config", platform_patch)
 app.router.add_get("/", index)
 app.router.add_static("/assets", WWW, show_index=False)
 
