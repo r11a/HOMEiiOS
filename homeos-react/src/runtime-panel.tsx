@@ -4,6 +4,7 @@ import type { HomeAssistant } from "./types";
 import { RuntimeApp } from "./runtime/RuntimeApp";
 import styles from "./runtime/runtime.css?inline";
 import widgetStyles from "./runtime/widgets.css?inline";
+import signatureStyles from "./runtime/signature.css?inline";
 
 class HomeiiPanel extends HTMLElement {
   private root: Root;
@@ -15,7 +16,7 @@ class HomeiiPanel extends HTMLElement {
     const shadow = this.attachShadow({ mode: "open" });
     const style = document.createElement("style");
     const mount = document.createElement("div");
-    style.textContent = `${styles}\n${widgetStyles}`;
+    style.textContent = `${styles}\n${widgetStyles}\n${signatureStyles}`;
     shadow.append(style, mount);
     this.root = createRoot(mount);
   }

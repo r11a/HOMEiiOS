@@ -22,7 +22,8 @@ type DiscoveredArea = {
 
 type Discovery = { areas: DiscoveredArea[]; unassigned: DiscoveredEntity[]; domains: Record<string, number> };
 type GeneratedWidget = { id: string; widgetType: string; entityIds: string[]; size: string; settings?: Record<string, unknown> };
-type GeneratedProject = { id: string; name: string; theme?: { mode: string; preset: string; tokens: Record<string, string | number> }; areas: Record<string, { title: string; widgets: GeneratedWidget[] }> };
+type GeneratedArea = { areaId: string; title: string; titleMode?: "auto" | "custom"; picture?: string; hidden?: boolean; categories?: string[]; widgets: GeneratedWidget[] };
+type GeneratedProject = { id: string; name: string; brand?: { name?: string; tagline?: string; logo?: string }; theme?: { mode: string; preset: string; tokens: Record<string, string | number> }; areas: Record<string, GeneratedArea> };
 type ActiveProject = { revision: number; active_project_id?: string | null; project?: GeneratedProject | null; can_edit: boolean };
 
 const domainLabels: Record<string, string> = {
@@ -30,6 +31,8 @@ const domainLabels: Record<string, string> = {
   cover: "פתחים", fan: "מאווררים", switch: "מתגים", sensor: "חיישנים",
   binary_sensor: "מצבים", lock: "מנעולים", person: "אנשים", weather: "מזג אוויר",
 };
+const categoryLabels: Record<string, string> = { overview: "סקירה", lighting: "תאורה", climate: "אקלים", media: "מדיה", security: "ביטחון", energy: "אנרגיה", cameras: "מצלמות" };
+const widgetCategory = (type: string) => type.startsWith("light.") || type.startsWith("switch.") || type.startsWith("cover.") ? "lighting" : type.startsWith("climate.") || type === "sensor.temperature" ? "climate" : type.startsWith("media.") ? "media" : type.startsWith("camera.") ? "cameras" : type.startsWith("security.") ? "security" : type === "sensor.power" || type === "sensor.energy" ? "energy" : "overview";
 
 export function RuntimeApp({ hass, narrow }: { hass?: HomeAssistant; narrow: boolean }) {
   const [discovery, setDiscovery] = useState<Discovery>();
@@ -40,6 +43,7 @@ export function RuntimeApp({ hass, narrow }: { hass?: HomeAssistant; narrow: boo
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("overview");
 
   useEffect(() => {
     if (!hass?.callWS) return;
@@ -80,9 +84,13 @@ export function RuntimeApp({ hass, narrow }: { hass?: HomeAssistant; narrow: boo
     return () => window.clearInterval(timer);
   }, [hass?.callWS]);
 
-  const area = discovery?.areas.find((candidate) => candidate.area_id === selectedArea);
   const generatedArea = selectedArea ? project?.areas[selectedArea] : undefined;
-  const liveEntities = useMemo(() => area?.entities.map((entity) => hass?.states[entity.entity_id] ?? entity) ?? [], [area, hass?.states]);
+  const area = discovery?.areas.find((candidate) => candidate.area_id === selectedArea);
+  const selectedEntityIds = useMemo(() => new Set(generatedArea?.widgets.flatMap((widget) => widget.entityIds) ?? []), [generatedArea]);
+  const liveEntities = useMemo(() => area?.entities.filter((entity) => selectedEntityIds.has(entity.entity_id)).map((entity) => hass?.states[entity.entity_id] ?? entity) ?? [], [area, selectedEntityIds, hass?.states]);
+  const categories = generatedArea?.categories?.length ? generatedArea.categories : ["overview", ...new Set((generatedArea?.widgets ?? []).map((widget) => widgetCategory(widget.widgetType)))];
+  const visibleWidgets = generatedArea?.widgets.filter((widget) => selectedCategory === "overview" || widgetCategory(widget.widgetType) === selectedCategory) ?? [];
+  const areaTitle = generatedArea?.titleMode === "custom" ? generatedArea.title : area?.name ?? generatedArea?.title;
   function showFeedback(message: string) {
     setFeedback(message);
     window.setTimeout(() => setFeedback(""), 2200);
@@ -97,7 +105,7 @@ export function RuntimeApp({ hass, narrow }: { hass?: HomeAssistant; narrow: boo
         type: "homeii/project/generate",
         project_id: project?.id ?? "home",
         name: project?.name ?? "הבית שלי",
-        template: "area-first",
+        template: "homeii-signature",
         revision: storeRevision,
       });
       setProject(result.project);
@@ -114,10 +122,11 @@ export function RuntimeApp({ hass, narrow }: { hass?: HomeAssistant; narrow: boo
   if (loading) return <main className="runtime-state"><span className="pulse" />סורק Areas וישויות…</main>;
   if (error) return <main className="runtime-state runtime-error"><strong>החיבור ל־HOMEii נכשל</strong><code>{error}</code></main>;
 
-  return <main className={`runtime-shell theme-${project?.theme?.preset ?? "granite"} ${narrow ? "is-narrow" : ""}`} dir="rtl" style={{ "--homeii-accent": String(project?.theme?.tokens.accent ?? "#d6a45d") } as React.CSSProperties}>
+  const tokens = project?.theme?.tokens ?? {};
+  return <main className={`runtime-shell theme-${project?.theme?.preset ?? "granite"} ${narrow ? "is-narrow" : ""}`} dir="rtl" style={{ "--homeii-accent": String(tokens.accent ?? "#d6a45d"), "--homeii-text": String(tokens.text ?? "#f8f5ef"), "--homeii-surface": String(tokens.surface ?? "#1b1918"), "--homeii-radius": `${Number(tokens.radius ?? 24)}px`, "--homeii-blur": `${Number(tokens.blur ?? 26)}px`, "--homeii-tile-opacity": String(tokens.tileOpacity ?? .72) } as React.CSSProperties}>
     <header className="runtime-header">
-      <div className="brand-mark" aria-hidden="true">H</div>
-      <div><strong>HOMEii</strong><span>Runtime Preview · מחובר ל־HA</span></div>
+      <div className="brand-mark" aria-hidden="true">{project?.brand?.logo ? <img src={project.brand.logo} alt="" /> : "H"}</div>
+      <div><strong>{project?.brand?.name ?? "HOMEii"}</strong><span>{project?.brand?.tagline ?? "הבית שלך, ברור ונגיש"}</span></div>
       <div className="runtime-actions" style={{ marginInlineStart: "auto", display: "flex", alignItems: "center", gap: 9 }}>
         {hass.user?.is_admin && !published && <button className="publish-button" style={{ minHeight: 42, paddingInline: 17, border: "1px solid #edc78a7a", borderRadius: 14, background: "linear-gradient(145deg,#d4a25e,#89623a)", color: "#17110b", fontWeight: 700, cursor: "pointer" }} onClick={publishGeneratedProject}>צור ופרסם דשבורד</button>}
         <div className="runtime-health"><i />{published ? "פורסם" : "תצוגה מקדימה"} · {discovery?.areas.length ?? 0} אזורים · {Object.values(discovery?.domains ?? {}).reduce((sum, value) => sum + value, 0)} ישויות</div>
@@ -125,40 +134,23 @@ export function RuntimeApp({ hass, narrow }: { hass?: HomeAssistant; narrow: boo
     </header>
 
     <nav className="area-nav" aria-label="חדרים ואזורים">
-      {discovery?.areas.map((item) => <button key={item.area_id} className={item.area_id === selectedArea ? "active" : ""} onClick={() => setSelectedArea(item.area_id)}>
-        <span>{item.name}</span><small>{item.entities.length} ישויות</small>
-      </button>)}
+      {Object.values(project?.areas ?? {}).filter((item) => !item.hidden).map((item) => { const liveArea = discovery?.areas.find((candidate) => candidate.area_id === item.areaId); return <button key={item.areaId} className={item.areaId === selectedArea ? "active" : ""} onClick={() => { setSelectedArea(item.areaId); setSelectedCategory("overview"); }}>
+        <span>{item.titleMode === "custom" ? item.title : liveArea?.name ?? item.title}</span><small>{item.widgets.length} רכיבים</small>
+      </button>; })}
     </nav>
 
     <section className="runtime-content">
       <article className="area-hero" style={area?.picture ? { backgroundImage: `linear-gradient(90deg, rgba(10,12,16,.86), rgba(10,12,16,.22)), url(${area.picture})` } : undefined}>
-        <span>AREA של Home Assistant</span><h1>{area?.name ?? "לא נמצאו Areas"}</h1>
-        <div className="domain-chips">{area?.domains.map((domain) => <span key={domain}>{domainLabels[domain] ?? domain}</span>)}</div>
+        <span>{project?.brand?.name ?? "HOMEii"} · AREA</span><h1>{areaTitle ?? "לא נמצאו Areas"}</h1>
+        <div className="hero-status"><b>{liveEntities.filter((entity) => !["off", "idle", "closed", "unavailable", "unknown"].includes(entity.state)).length}</b><span>פעילים עכשיו</span><i/><b>{liveEntities.length}</b><span>רכיבים נבחרים</span></div>
       </article>
 
+      <nav className="category-nav" aria-label="קטגוריות בחדר">{categories.map((category) => <button key={category} className={selectedCategory === category ? "active" : ""} onClick={() => setSelectedCategory(category)}>{categoryLabels[category] ?? category}</button>)}</nav>
+
       {generatedArea && <section className="product-widgets">
-        {generatedArea.widgets.map((widget) => <RuntimeWidget key={widget.id} widget={widget} hass={hass} onFeedback={showFeedback} />)}
+        {visibleWidgets.map((widget) => <RuntimeWidget key={widget.id} widget={widget} hass={hass} onFeedback={showFeedback} />)}
+        {!visibleWidgets.length && <div className="runtime-empty"><strong>הקטגוריה עדיין ריקה</strong><span>מנהל יכול להוסיף אליה Widgets דרך HOMEii Studio.</span></div>}
       </section>}
-
-      <div className="runtime-grid">
-        <section className="preview-card">
-          <header><div><span>{published ? "Project פעיל" : "יצירה אוטומטית"}</span><h2>{published ? "Widgets שפורסמו" : "Widgets מוצעים"}</h2></div><b>{generatedArea?.widgets.length ?? 0}</b></header>
-          {hass.user?.is_admin ? <div className="widget-list">{generatedArea?.widgets.map((widget) => <div key={widget.id} className="widget-row">
-            <i /><div><strong>{widget.widgetType}</strong><small>{widget.entityIds.length} ישויות · {widget.size}</small></div>
-          </div>)}</div> : <p>תצוגת המחולל זמינה למנהל בלבד.</p>}
-        </section>
-
-        <section className="preview-card">
-          <header><div><span>מצב חי</span><h2>ישויות ב־Area</h2></div><b>{liveEntities.length}</b></header>
-          <div className="entity-list">{liveEntities.slice(0, 18).map((entity) => {
-            const id = "entity_id" in entity ? entity.entity_id : "";
-            const fallback = area?.entities.find((candidate) => candidate.entity_id === id);
-            return <button key={id} onClick={() => hass.navigate?.(`/config/entities/entity/${id}`)}>
-              <div><strong>{fallback?.name ?? id}</strong><small>{id}</small></div><span className={entity.state === "unavailable" ? "unavailable" : ""}>{entity.state}</span>
-            </button>;
-          })}</div>
-        </section>
-      </div>
     </section>
     {feedback && <div className="runtime-feedback" role="status">{feedback}</div>}
   </main>;

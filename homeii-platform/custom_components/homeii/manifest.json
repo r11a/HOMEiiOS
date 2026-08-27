@@ -1,7 +1,7 @@
 {
   "domain": "homeii",
   "name": "HOMEii Dashboard Platform",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "documentation": "https://github.com/r11a/HOMEiiOS",
   "issue_tracker": "https://github.com/r11a/HOMEiiOS/issues",
   "codeowners": [],

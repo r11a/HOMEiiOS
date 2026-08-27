@@ -8080,8 +8080,49 @@ var S = {
 	"entity.generic": "ישות כללית",
 	"switch.collection": "מתגים",
 	"security.lock": "מנעולים"
+}, C = {
+	overview: "סקירה",
+	lighting: "תאורה",
+	climate: "אקלים",
+	media: "מדיה",
+	security: "ביטחון",
+	energy: "אנרגיה",
+	cameras: "מצלמות"
+}, te = {
+	"rich-brown": {
+		accent: "#d6a45d",
+		text: "#f8f5ef",
+		surface: "#1b1918",
+		radius: 24,
+		blur: 26,
+		tileOpacity: .72
+	},
+	"night-blue": {
+		accent: "#75b8ff",
+		text: "#f4f8ff",
+		surface: "#111a29",
+		radius: 24,
+		blur: 28,
+		tileOpacity: .7
+	},
+	granite: {
+		accent: "#aeb9c8",
+		text: "#f6f7f9",
+		surface: "#191b20",
+		radius: 22,
+		blur: 24,
+		tileOpacity: .76
+	},
+	ivory: {
+		accent: "#9d744a",
+		text: "#241d17",
+		surface: "#f3ede3",
+		radius: 24,
+		blur: 22,
+		tileOpacity: .82
+	}
 };
-function C() {
+function ne() {
 	let [e, t] = (0, b.useState)(), [n, r] = (0, b.useState)(), [i, a] = (0, b.useState)(), [o, s] = (0, b.useState)(""), [c, l] = (0, b.useState)("טוען את HOMEii…"), [u, d] = (0, b.useState)(!1);
 	async function f() {
 		l("מסנכרן עם Home Assistant…");
@@ -8111,9 +8152,9 @@ function C() {
 				let n = await ee("generate", {
 					method: "POST",
 					body: JSON.stringify({
-						project_id: "home",
-						name: "הבית שלי",
-						template: "area-first",
+						project_id: i?.id ?? "home",
+						name: i?.name ?? "הבית שלי",
+						template: i?.template ?? "homeii-signature",
 						revision: e.revision
 					})
 				});
@@ -8139,7 +8180,39 @@ function C() {
 			}
 		});
 	}
-	async function h() {
+	function h(e, t) {
+		a((n) => n && {
+			...n,
+			theme: {
+				...n.theme,
+				tokens: {
+					...n.theme.tokens,
+					[e]: t
+				}
+			}
+		});
+	}
+	function g(e) {
+		a((t) => t && {
+			...t,
+			theme: {
+				...t.theme,
+				preset: e,
+				tokens: {
+					...te[e],
+					...Object.fromEntries(Object.entries(t.theme.tokens).filter(([e]) => ![
+						"accent",
+						"text",
+						"surface",
+						"radius",
+						"blur",
+						"tileOpacity"
+					].includes(e)))
+				}
+			}
+		});
+	}
+	async function _() {
 		if (!(!i || !e)) {
 			d(!0);
 			try {
@@ -8163,22 +8236,64 @@ function C() {
 			}
 		}
 	}
-	let g = i?.areas[o], _ = (e, t) => n?.areas.find((t) => t.area_id === e)?.name ?? t ?? e, v = (0, b.useMemo)(() => Object.values(i?.areas ?? {}).reduce((e, t) => e + t.widgets.reduce((e, t) => e + t.entityIds.length, 0), 0), [i]);
-	return i ? /* @__PURE__ */ (0, x.jsxs)("main", {
+	let v = i?.areas[o], y = (e, t, r) => r === "custom" ? t ?? e : n?.areas.find((t) => t.area_id === e)?.name ?? t ?? e, ne = (0, b.useMemo)(() => Object.values(i?.areas ?? {}).reduce((e, t) => e + t.widgets.reduce((e, t) => e + t.entityIds.length, 0), 0), [i]);
+	if (!i) return /* @__PURE__ */ (0, x.jsxs)("main", {
+		className: "studio-empty",
+		dir: "rtl",
+		children: [
+			/* @__PURE__ */ (0, x.jsx)("div", {
+				className: "studio-logo",
+				children: "H"
+			}),
+			/* @__PURE__ */ (0, x.jsx)("small", { children: "HOMEii CONTROL PLANE" }),
+			/* @__PURE__ */ (0, x.jsx)("h1", { children: "ניצור את הדשבורד הראשון שלך" }),
+			/* @__PURE__ */ (0, x.jsxs)("p", { children: [n?.areas.length ?? 0, " Areas נמצאו ב־Home Assistant. ה־Integration יבחר Widgets מתאימים וישמור Project מסונכרן."] }),
+			/* @__PURE__ */ (0, x.jsx)("button", {
+				disabled: u || !e,
+				onClick: p,
+				children: u ? "יוצר…" : "צור HOMEii אוטומטית"
+			}),
+			/* @__PURE__ */ (0, x.jsx)("span", { children: c })
+		]
+	});
+	let re = {
+		"--preview-accent": String(i.theme.tokens.accent ?? "#d6a45d"),
+		"--preview-text": String(i.theme.tokens.text ?? "#f8f5ef"),
+		"--preview-surface": String(i.theme.tokens.surface ?? "#1b1918"),
+		"--preview-radius": `${Number(i.theme.tokens.radius ?? 24)}px`,
+		"--preview-blur": `${Number(i.theme.tokens.blur ?? 26)}px`,
+		"--preview-opacity": String(i.theme.tokens.tileOpacity ?? .72)
+	};
+	return /* @__PURE__ */ (0, x.jsxs)("main", {
 		className: "studio-shell",
 		dir: "rtl",
+		style: re,
 		children: [
 			/* @__PURE__ */ (0, x.jsxs)("header", {
 				className: "studio-topbar",
 				children: [
 					/* @__PURE__ */ (0, x.jsx)("div", {
 						className: "studio-logo",
-						children: "H"
+						children: i.brand.logo ? /* @__PURE__ */ (0, x.jsx)("img", {
+							src: i.brand.logo,
+							alt: ""
+						}) : "H"
 					}),
-					/* @__PURE__ */ (0, x.jsxs)("div", { children: [/* @__PURE__ */ (0, x.jsx)("small", { children: "HOMEii STUDIO" }), /* @__PURE__ */ (0, x.jsx)("strong", { children: i.name })] }),
+					/* @__PURE__ */ (0, x.jsxs)("div", { children: [/* @__PURE__ */ (0, x.jsx)("small", { children: "HOMEii DESIGN STUDIO" }), /* @__PURE__ */ (0, x.jsx)("strong", { children: i.name })] }),
 					/* @__PURE__ */ (0, x.jsxs)("div", {
 						className: "studio-status",
 						children: [/* @__PURE__ */ (0, x.jsx)("i", {}), c]
+					}),
+					/* @__PURE__ */ (0, x.jsx)("button", {
+						className: "secondary",
+						disabled: u,
+						onClick: () => void p(),
+						children: "רענן תוכן מ־HA"
+					}),
+					/* @__PURE__ */ (0, x.jsx)("button", {
+						className: "secondary",
+						onClick: () => void f(),
+						children: "סנכרון"
 					}),
 					/* @__PURE__ */ (0, x.jsx)("a", {
 						href: "/homeii",
@@ -8186,32 +8301,36 @@ function C() {
 					}),
 					/* @__PURE__ */ (0, x.jsx)("button", {
 						disabled: u,
-						onClick: h,
-						children: u ? "שומר…" : "פרסם שינויים"
+						onClick: _,
+						children: u ? "שומר…" : "פרסם לכל המכשירים"
 					})
 				]
 			}),
 			/* @__PURE__ */ (0, x.jsxs)("aside", {
 				className: "studio-sidebar",
-				children: [/* @__PURE__ */ (0, x.jsx)("h2", { children: "Areas" }), Object.values(i.areas).map((e) => /* @__PURE__ */ (0, x.jsxs)("button", {
+				children: [/* @__PURE__ */ (0, x.jsx)("h2", { children: "Areas · תוכן" }), Object.values(i.areas).map((e) => /* @__PURE__ */ (0, x.jsxs)("button", {
 					className: o === e.areaId ? "active" : "",
 					onClick: () => s(e.areaId),
-					children: [/* @__PURE__ */ (0, x.jsx)("span", { children: _(e.areaId, e.title) }), /* @__PURE__ */ (0, x.jsxs)("small", { children: [e.widgets.length, " Widgets"] })]
+					children: [/* @__PURE__ */ (0, x.jsx)("span", { children: y(e.areaId, e.title, e.titleMode) }), /* @__PURE__ */ (0, x.jsxs)("small", { children: [e.widgets.length, " Widgets נבחרו"] })]
 				}, e.areaId))]
 			}),
 			/* @__PURE__ */ (0, x.jsxs)("section", {
 				className: "studio-canvas",
 				children: [/* @__PURE__ */ (0, x.jsxs)("div", {
 					className: "studio-hero",
-					style: g?.picture ? { backgroundImage: `linear-gradient(90deg,#111d,#1113),url(${g.picture})` } : void 0,
+					style: v?.picture ? { backgroundImage: `linear-gradient(90deg,#111d,#1113),url(${v.picture})` } : void 0,
 					children: [
-						/* @__PURE__ */ (0, x.jsx)("small", { children: "AREA PREVIEW" }),
-						/* @__PURE__ */ (0, x.jsx)("h1", { children: g ? _(g.areaId, g.title) : "" }),
-						/* @__PURE__ */ (0, x.jsxs)("span", { children: [g?.widgets.reduce((e, t) => e + t.entityIds.length, 0), " ישויות מחוברות"] })
+						/* @__PURE__ */ (0, x.jsxs)("small", { children: [i.brand.name, " · LIVE PREVIEW"] }),
+						/* @__PURE__ */ (0, x.jsx)("h1", { children: v ? y(v.areaId, v.title, v.titleMode) : "" }),
+						/* @__PURE__ */ (0, x.jsx)("p", { children: i.brand.tagline }),
+						/* @__PURE__ */ (0, x.jsx)("div", {
+							className: "studio-categories",
+							children: (v?.categories ?? []).map((e) => /* @__PURE__ */ (0, x.jsx)("span", { children: C[e] ?? e }, e))
+						})
 					]
 				}), /* @__PURE__ */ (0, x.jsx)("div", {
 					className: "studio-widgets",
-					children: g?.widgets.map((e) => /* @__PURE__ */ (0, x.jsxs)("article", { children: [
+					children: v?.widgets.map((e) => /* @__PURE__ */ (0, x.jsxs)("article", { children: [
 						/* @__PURE__ */ (0, x.jsx)("div", {
 							className: "widget-icon",
 							children: S[e.widgetType]?.[0] ?? "H"
@@ -8223,7 +8342,7 @@ function C() {
 						] })] }),
 						/* @__PURE__ */ (0, x.jsxs)("select", {
 							value: e.size,
-							onChange: (t) => m(g.areaId, (n) => ({
+							onChange: (t) => m(v.areaId, (n) => ({
 								...n,
 								widgets: n.widgets.map((n) => n.id === e.id ? {
 									...n,
@@ -8246,8 +8365,9 @@ function C() {
 							]
 						}),
 						/* @__PURE__ */ (0, x.jsx)("button", {
-							onClick: () => m(g.areaId, (t) => ({
+							onClick: () => m(v.areaId, (t) => ({
 								...t,
+								excludedWidgetIds: e.settings?.generated ? [.../* @__PURE__ */ new Set([...t.excludedWidgetIds ?? [], e.id])] : t.excludedWidgetIds,
 								widgets: t.widgets.filter((t) => t.id !== e.id)
 							})),
 							children: "הסר"
@@ -8258,99 +8378,191 @@ function C() {
 			/* @__PURE__ */ (0, x.jsxs)("aside", {
 				className: "studio-inspector",
 				children: [
-					/* @__PURE__ */ (0, x.jsx)("h2", { children: "עיצוב גלובלי" }),
-					/* @__PURE__ */ (0, x.jsxs)("label", { children: ["שם הדשבורד", /* @__PURE__ */ (0, x.jsx)("input", {
-						value: i.name,
-						onChange: (e) => a({
-							...i,
-							name: e.target.value
-						})
-					})] }),
-					/* @__PURE__ */ (0, x.jsxs)("label", { children: ["ערכת בסיס", /* @__PURE__ */ (0, x.jsxs)("select", {
-						value: i.theme.preset,
-						onChange: (e) => a({
-							...i,
-							theme: {
-								...i.theme,
-								preset: e.target.value
-							}
+					/* @__PURE__ */ (0, x.jsxs)("section", { children: [
+						/* @__PURE__ */ (0, x.jsx)("small", {
+							className: "eyebrow",
+							children: "BRAND SYSTEM"
 						}),
-						children: [
-							/* @__PURE__ */ (0, x.jsx)("option", {
-								value: "granite",
-								children: "Granite"
-							}),
-							/* @__PURE__ */ (0, x.jsx)("option", {
-								value: "night-blue",
-								children: "Night Blue"
-							}),
-							/* @__PURE__ */ (0, x.jsx)("option", {
-								value: "rich-brown",
-								children: "Rich Brown"
-							}),
-							/* @__PURE__ */ (0, x.jsx)("option", {
-								value: "ivory",
-								children: "Ivory"
-							})
-						]
-					})] }),
-					/* @__PURE__ */ (0, x.jsxs)("label", { children: ["צבע הדגשה", /* @__PURE__ */ (0, x.jsx)("input", {
-						type: "color",
-						value: String(i.theme.tokens.accent ?? "#d6a45d"),
-						onChange: (e) => a({
-							...i,
-							theme: {
-								...i.theme,
-								tokens: {
-									...i.theme.tokens,
-									accent: e.target.value
+						/* @__PURE__ */ (0, x.jsx)("h2", { children: "מיתוג גלובלי" }),
+						/* @__PURE__ */ (0, x.jsxs)("label", { children: ["שם המותג", /* @__PURE__ */ (0, x.jsx)("input", {
+							value: i.brand.name,
+							onChange: (e) => a({
+								...i,
+								brand: {
+									...i.brand,
+									name: e.target.value
 								}
-							}
+							})
+						})] }),
+						/* @__PURE__ */ (0, x.jsxs)("label", { children: ["שורת מותג", /* @__PURE__ */ (0, x.jsx)("input", {
+							value: i.brand.tagline ?? "",
+							onChange: (e) => a({
+								...i,
+								brand: {
+									...i.brand,
+									tagline: e.target.value
+								}
+							})
+						})] }),
+						/* @__PURE__ */ (0, x.jsxs)("label", { children: ["כתובת לוגו", /* @__PURE__ */ (0, x.jsx)("input", {
+							dir: "ltr",
+							value: i.brand.logo ?? "",
+							onChange: (e) => a({
+								...i,
+								brand: {
+									...i.brand,
+									logo: e.target.value
+								}
+							})
+						})] })
+					] }),
+					/* @__PURE__ */ (0, x.jsxs)("section", { children: [
+						/* @__PURE__ */ (0, x.jsx)("small", {
+							className: "eyebrow",
+							children: "DESIGN TOKENS"
+						}),
+						/* @__PURE__ */ (0, x.jsx)("h2", { children: "ערכת הממשק" }),
+						/* @__PURE__ */ (0, x.jsxs)("label", { children: ["ערכת בסיס", /* @__PURE__ */ (0, x.jsxs)("select", {
+							value: i.theme.preset,
+							onChange: (e) => g(e.target.value),
+							children: [
+								/* @__PURE__ */ (0, x.jsx)("option", {
+									value: "rich-brown",
+									children: "Rich Brown"
+								}),
+								/* @__PURE__ */ (0, x.jsx)("option", {
+									value: "night-blue",
+									children: "Night Blue"
+								}),
+								/* @__PURE__ */ (0, x.jsx)("option", {
+									value: "granite",
+									children: "Granite"
+								}),
+								/* @__PURE__ */ (0, x.jsx)("option", {
+									value: "ivory",
+									children: "Ivory"
+								})
+							]
+						})] }),
+						/* @__PURE__ */ (0, x.jsxs)("div", {
+							className: "color-pair",
+							children: [
+								/* @__PURE__ */ (0, x.jsxs)("label", { children: ["הדגשה", /* @__PURE__ */ (0, x.jsx)("input", {
+									type: "color",
+									value: String(i.theme.tokens.accent ?? "#d6a45d"),
+									onChange: (e) => h("accent", e.target.value)
+								})] }),
+								/* @__PURE__ */ (0, x.jsxs)("label", { children: ["טקסט", /* @__PURE__ */ (0, x.jsx)("input", {
+									type: "color",
+									value: String(i.theme.tokens.text ?? "#f8f5ef"),
+									onChange: (e) => h("text", e.target.value)
+								})] }),
+								/* @__PURE__ */ (0, x.jsxs)("label", { children: ["משטח", /* @__PURE__ */ (0, x.jsx)("input", {
+									type: "color",
+									value: String(i.theme.tokens.surface ?? "#1b1918"),
+									onChange: (e) => h("surface", e.target.value)
+								})] })
+							]
+						}),
+						/* @__PURE__ */ (0, x.jsxs)("label", { children: [
+							"עיגול פינות · ",
+							Number(i.theme.tokens.radius ?? 24),
+							"px",
+							/* @__PURE__ */ (0, x.jsx)("input", {
+								type: "range",
+								min: "12",
+								max: "38",
+								value: Number(i.theme.tokens.radius ?? 24),
+								onChange: (e) => h("radius", Number(e.target.value))
+							})
+						] }),
+						/* @__PURE__ */ (0, x.jsxs)("label", { children: [
+							"טשטוש זכוכית · ",
+							Number(i.theme.tokens.blur ?? 26),
+							"px",
+							/* @__PURE__ */ (0, x.jsx)("input", {
+								type: "range",
+								min: "0",
+								max: "48",
+								value: Number(i.theme.tokens.blur ?? 26),
+								onChange: (e) => h("blur", Number(e.target.value))
+							})
+						] }),
+						/* @__PURE__ */ (0, x.jsxs)("label", { children: [
+							"שקיפות אריחים · ",
+							Math.round(Number(i.theme.tokens.tileOpacity ?? .72) * 100),
+							"%",
+							/* @__PURE__ */ (0, x.jsx)("input", {
+								type: "range",
+								min: "35",
+								max: "95",
+								value: Number(i.theme.tokens.tileOpacity ?? .72) * 100,
+								onChange: (e) => h("tileOpacity", Number(e.target.value) / 100)
+							})
+						] })
+					] }),
+					v && /* @__PURE__ */ (0, x.jsxs)("section", { children: [
+						/* @__PURE__ */ (0, x.jsx)("small", {
+							className: "eyebrow",
+							children: "AREA OVERRIDES"
+						}),
+						/* @__PURE__ */ (0, x.jsx)("h2", { children: "החדר הנבחר" }),
+						/* @__PURE__ */ (0, x.jsxs)("label", {
+							className: "toggle-row",
+							children: [/* @__PURE__ */ (0, x.jsx)("input", {
+								type: "checkbox",
+								checked: v.titleMode === "custom",
+								onChange: (e) => m(v.areaId, (t) => ({
+									...t,
+									titleMode: e.target.checked ? "custom" : "auto",
+									title: e.target.checked ? y(t.areaId, t.title) : t.title
+								}))
+							}), "שם מותאם במקום שם HA"]
+						}),
+						v.titleMode === "custom" && /* @__PURE__ */ (0, x.jsxs)("label", { children: ["שם מוצג", /* @__PURE__ */ (0, x.jsx)("input", {
+							value: v.title ?? "",
+							onChange: (e) => m(v.areaId, (t) => ({
+								...t,
+								title: e.target.value
+							}))
+						})] }),
+						/* @__PURE__ */ (0, x.jsxs)("label", { children: ["תמונת Hero", /* @__PURE__ */ (0, x.jsx)("input", {
+							dir: "ltr",
+							value: v.picture ?? "",
+							onChange: (e) => m(v.areaId, (t) => ({
+								...t,
+								picture: e.target.value
+							}))
+						})] }),
+						/* @__PURE__ */ (0, x.jsx)("div", {
+							className: "category-picker",
+							children: Object.entries(C).map(([e, t]) => /* @__PURE__ */ (0, x.jsx)("button", {
+								className: (v.categories ?? []).includes(e) ? "active" : "",
+								onClick: () => m(v.areaId, (t) => ({
+									...t,
+									categories: (t.categories ?? []).includes(e) ? (t.categories ?? []).filter((t) => t !== e) : [...t.categories ?? [], e]
+								})),
+								children: t
+							}, e))
 						})
-					})] }),
-					/* @__PURE__ */ (0, x.jsxs)("label", { children: ["תמונת Hero", /* @__PURE__ */ (0, x.jsx)("input", {
-						dir: "ltr",
-						value: g?.picture ?? "",
-						onChange: (e) => g && m(g.areaId, (t) => ({
-							...t,
-							picture: e.target.value
-						}))
-					})] }),
+					] }),
 					/* @__PURE__ */ (0, x.jsxs)("div", {
 						className: "studio-metrics",
-						children: [/* @__PURE__ */ (0, x.jsxs)("span", { children: [/* @__PURE__ */ (0, x.jsx)("b", { children: Object.keys(i.areas).length }), " Areas"] }), /* @__PURE__ */ (0, x.jsxs)("span", { children: [/* @__PURE__ */ (0, x.jsx)("b", { children: v }), " bindings"] })]
+						children: [/* @__PURE__ */ (0, x.jsxs)("span", { children: [/* @__PURE__ */ (0, x.jsx)("b", { children: Object.keys(i.areas).length }), " Areas"] }), /* @__PURE__ */ (0, x.jsxs)("span", { children: [/* @__PURE__ */ (0, x.jsx)("b", { children: ne }), " bindings"] })]
 					})
 				]
 			})
-		]
-	}) : /* @__PURE__ */ (0, x.jsxs)("main", {
-		className: "studio-empty",
-		dir: "rtl",
-		children: [
-			/* @__PURE__ */ (0, x.jsx)("div", {
-				className: "studio-logo",
-				children: "H"
-			}),
-			/* @__PURE__ */ (0, x.jsx)("small", { children: "HOMEii CONTROL PLANE" }),
-			/* @__PURE__ */ (0, x.jsx)("h1", { children: "ניצור את הדשבורד הראשון שלך" }),
-			/* @__PURE__ */ (0, x.jsxs)("p", { children: [n?.areas.length ?? 0, " Areas נמצאו ב־Home Assistant. ה־Integration יבחר Widgets מתאימים וישמור Project מסונכרן."] }),
-			/* @__PURE__ */ (0, x.jsx)("button", {
-				disabled: u || !e,
-				onClick: p,
-				children: u ? "יוצר…" : "צור HOMEii אוטומטית"
-			}),
-			/* @__PURE__ */ (0, x.jsx)("span", { children: c })
 		]
 	});
 }
 //#endregion
 //#region src/studio/studio.css?inline
-var te = ":host{color:#f8f5ef;background:#121315;min-height:100%;font-family:Heebo,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;display:block}*{box-sizing:border-box}button,input,select{font:inherit}.studio-shell{background:radial-gradient(circle at 80% 0,#49372466,#0000 32%),#121315;grid-template:76px 1fr/230px minmax(0,1fr) 290px;min-height:100vh;display:grid}.studio-topbar{-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);background:#18191cdd;border-bottom:1px solid #ffffff16;grid-column:1/-1;align-items:center;gap:12px;padding:12px 20px;display:flex}.studio-logo{color:#18110a;background:linear-gradient(145deg,#e2b46d,#805a34);border-radius:15px;place-items:center;width:46px;height:46px;font-size:23px;font-weight:900;display:grid;box-shadow:inset 0 1px #fff7,0 12px 30px #0005}.studio-topbar small,.studio-topbar strong{display:block}.studio-topbar small{color:#a9a39b;letter-spacing:1px;font-size:10px}.studio-status{color:#bcb6ae;margin-inline-start:auto;font-size:13px}.studio-status i{background:#79dca8;border-radius:50%;width:8px;height:8px;margin-inline-end:7px;display:inline-block;box-shadow:0 0 12px #79dca8}.studio-topbar a,.studio-topbar button,.studio-empty button{color:#eee;cursor:pointer;background:#ffffff0b;border:1px solid #ffffff1c;border-radius:14px;min-height:42px;padding:0 16px;text-decoration:none}.studio-topbar button,.studio-empty button{color:#17110c;background:linear-gradient(145deg,#d5a45e,#8a633b);border-color:#e5bd7b88;font-weight:750}.studio-sidebar,.studio-inspector{background:#17181bd9;border-inline-end:1px solid #ffffff12;padding:18px}.studio-inspector{border-inline-start:1px solid #ffffff12;border-inline-end:0}.studio-sidebar h2,.studio-inspector h2{color:#aaa39b;font-size:15px}.studio-sidebar button{color:#d6d1c9;text-align:right;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:14px;width:100%;margin-bottom:7px;padding:12px;display:block}.studio-sidebar button.active{color:#fff;background:#d6a45d20;border-color:#d6a45d55}.studio-sidebar span,.studio-sidebar small{display:block}.studio-sidebar small{opacity:.55}.studio-canvas{min-width:0;padding:18px;overflow:auto}.studio-hero{background:linear-gradient(145deg,#342a21,#18191c) 50%/cover;border:1px solid #ffffff1d;border-radius:28px;flex-direction:column;justify-content:flex-end;min-height:250px;padding:34px;display:flex;box-shadow:inset 0 1px #fff3}.studio-hero small{color:#d8af72}.studio-hero h1{margin:5px 0;font-size:48px}.studio-widgets{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;display:grid}.studio-widgets article{background:linear-gradient(145deg,#ffffff0d,#ffffff06);border:1px solid #ffffff15;border-radius:18px;grid-template-columns:46px minmax(0,1fr) auto auto;align-items:center;gap:11px;padding:15px;display:grid}.widget-icon{color:#e7bd7d;background:#d6a45d22;border-radius:15px;place-items:center;width:46px;height:46px;font-weight:800;display:grid}.studio-widgets strong,.studio-widgets small{text-overflow:ellipsis;white-space:nowrap;display:block;overflow:hidden}.studio-widgets small{color:#99938b}.studio-widgets select,.studio-widgets button,.studio-inspector input,.studio-inspector select{color:#ddd;background:#0c0d10;border:1px solid #ffffff18;border-radius:11px;min-height:38px;padding:7px 10px}.studio-widgets button{cursor:pointer}.studio-inspector label{color:#aaa49c;margin:18px 0;font-size:12px;display:block}.studio-inspector label input,.studio-inspector label select{width:100%;margin-top:7px;display:block}.studio-metrics{grid-template-columns:1fr 1fr;gap:8px;display:grid}.studio-metrics span{color:#aaa;background:#ffffff09;border-radius:14px;padding:13px}.studio-metrics b{color:#fff;font-size:22px;display:block}.studio-empty{text-align:center;background:radial-gradient(circle at 50% 20%,#664a2d88,#0000 32%),#121315;place-content:center;justify-items:center;min-height:100vh;padding:24px;display:grid}.studio-empty h1{margin:18px 0 6px;font-size:clamp(34px,6vw,64px)}.studio-empty p{color:#aaa49b;max-width:600px}.studio-empty button{margin:20px 0 10px}@media (max-width:900px){.studio-shell{grid-template:70px auto 1fr/1fr}.studio-topbar{grid-column:1}.studio-status{display:none}.studio-sidebar{border:0;border-bottom:1px solid #ffffff12;display:flex;overflow:auto}.studio-sidebar h2{display:none}.studio-sidebar button{min-width:130px;margin:0 6px}.studio-canvas{grid-row:3}.studio-inspector{border:1px solid #ffffff1c;border-radius:22px;max-height:42vh;position:fixed;inset:auto 10px 10px;overflow:auto;box-shadow:0 20px 70px #000b}.studio-widgets{grid-template-columns:1fr}.studio-widgets article{grid-template-columns:42px minmax(0,1fr)}.studio-widgets select,.studio-widgets button{grid-column:auto}.studio-topbar a{display:none}}", ne = class extends HTMLElement {
+var re = ":host{color:#f8f5ef;background:#121315;min-height:100%;font-family:Heebo,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;display:block}*{box-sizing:border-box}button,input,select{font:inherit}.studio-shell{background:radial-gradient(circle at 80% 0,#49372466,#0000 32%),#121315;grid-template:76px 1fr/230px minmax(0,1fr) 290px;min-height:100vh;display:grid}.studio-topbar{-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);background:#18191cdd;border-bottom:1px solid #ffffff16;grid-column:1/-1;align-items:center;gap:12px;padding:12px 20px;display:flex}.studio-logo{color:#18110a;background:linear-gradient(145deg,#e2b46d,#805a34);border-radius:15px;place-items:center;width:46px;height:46px;font-size:23px;font-weight:900;display:grid;box-shadow:inset 0 1px #fff7,0 12px 30px #0005}.studio-topbar small,.studio-topbar strong{display:block}.studio-topbar small{color:#a9a39b;letter-spacing:1px;font-size:10px}.studio-status{color:#bcb6ae;margin-inline-start:auto;font-size:13px}.studio-status i{background:#79dca8;border-radius:50%;width:8px;height:8px;margin-inline-end:7px;display:inline-block;box-shadow:0 0 12px #79dca8}.studio-topbar a,.studio-topbar button,.studio-empty button{color:#eee;cursor:pointer;background:#ffffff0b;border:1px solid #ffffff1c;border-radius:14px;min-height:42px;padding:0 16px;text-decoration:none}.studio-topbar button,.studio-empty button{color:#17110c;background:linear-gradient(145deg,#d5a45e,#8a633b);border-color:#e5bd7b88;font-weight:750}.studio-sidebar,.studio-inspector{background:#17181bd9;border-inline-end:1px solid #ffffff12;padding:18px}.studio-inspector{border-inline-start:1px solid #ffffff12;border-inline-end:0}.studio-sidebar h2,.studio-inspector h2{color:#aaa39b;font-size:15px}.studio-sidebar button{color:#d6d1c9;text-align:right;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:14px;width:100%;margin-bottom:7px;padding:12px;display:block}.studio-sidebar button.active{color:#fff;background:#d6a45d20;border-color:#d6a45d55}.studio-sidebar span,.studio-sidebar small{display:block}.studio-sidebar small{opacity:.55}.studio-canvas{min-width:0;padding:18px;overflow:auto}.studio-hero{background:linear-gradient(145deg,#342a21,#18191c) 50%/cover;border:1px solid #ffffff1d;border-radius:28px;flex-direction:column;justify-content:flex-end;min-height:250px;padding:34px;display:flex;box-shadow:inset 0 1px #fff3}.studio-hero small{color:#d8af72}.studio-hero h1{margin:5px 0;font-size:48px}.studio-widgets{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;display:grid}.studio-widgets article{background:linear-gradient(145deg,#ffffff0d,#ffffff06);border:1px solid #ffffff15;border-radius:18px;grid-template-columns:46px minmax(0,1fr) auto auto;align-items:center;gap:11px;padding:15px;display:grid}.widget-icon{color:#e7bd7d;background:#d6a45d22;border-radius:15px;place-items:center;width:46px;height:46px;font-weight:800;display:grid}.studio-widgets strong,.studio-widgets small{text-overflow:ellipsis;white-space:nowrap;display:block;overflow:hidden}.studio-widgets small{color:#99938b}.studio-widgets select,.studio-widgets button,.studio-inspector input,.studio-inspector select{color:#ddd;background:#0c0d10;border:1px solid #ffffff18;border-radius:11px;min-height:38px;padding:7px 10px}.studio-widgets button{cursor:pointer}.studio-inspector label{color:#aaa49c;margin:18px 0;font-size:12px;display:block}.studio-inspector label input,.studio-inspector label select{width:100%;margin-top:7px;display:block}.studio-metrics{grid-template-columns:1fr 1fr;gap:8px;display:grid}.studio-metrics span{color:#aaa;background:#ffffff09;border-radius:14px;padding:13px}.studio-metrics b{color:#fff;font-size:22px;display:block}.studio-empty{text-align:center;background:radial-gradient(circle at 50% 20%,#664a2d88,#0000 32%),#121315;place-content:center;justify-items:center;min-height:100vh;padding:24px;display:grid}.studio-empty h1{margin:18px 0 6px;font-size:clamp(34px,6vw,64px)}.studio-empty p{color:#aaa49b;max-width:600px}.studio-empty button{margin:20px 0 10px}@media (max-width:900px){.studio-shell{grid-template:70px auto 1fr/1fr}.studio-topbar{grid-column:1}.studio-status{display:none}.studio-sidebar{border:0;border-bottom:1px solid #ffffff12;display:flex;overflow:auto}.studio-sidebar h2{display:none}.studio-sidebar button{min-width:130px;margin:0 6px}.studio-canvas{grid-row:3}.studio-inspector{border:1px solid #ffffff1c;border-radius:22px;max-height:42vh;position:fixed;inset:auto 10px 10px;overflow:auto;box-shadow:0 20px 70px #000b}.studio-widgets{grid-template-columns:1fr}.studio-widgets article{grid-template-columns:42px minmax(0,1fr)}.studio-widgets select,.studio-widgets button{grid-column:auto}.studio-topbar a{display:none}}", w = ".studio-logo{overflow:hidden}.studio-logo img{object-fit:contain;width:76%;height:76%}.studio-topbar button.secondary{color:#ddd;background:#ffffff0b;border-color:#ffffff1c;font-weight:500}.studio-inspector{overflow:auto}.studio-inspector section{border-bottom:1px solid #ffffff12;margin-bottom:18px;padding:4px 0 18px}.studio-hero{min-height:290px;color:var(--preview-text);border-color:color-mix(in srgb,var(--preview-accent) 24%,transparent);border-radius:var(--preview-radius);background-color:var(--preview-surface)}.studio-hero small,.eyebrow{color:var(--preview-accent)}.studio-hero p{opacity:.72;margin:0 0 18px}.studio-categories{flex-wrap:wrap;gap:7px;display:flex}.studio-categories span{background:color-mix(in srgb,var(--preview-surface) calc(var(--preview-opacity) * 100%),transparent);-webkit-backdrop-filter:blur(var(--preview-blur));backdrop-filter:blur(var(--preview-blur));border:1px solid #ffffff20;border-radius:999px;padding:7px 11px;font-size:12px}.studio-widgets article{color:var(--preview-text);border-radius:calc(var(--preview-radius) * .72);border-color:color-mix(in srgb,var(--preview-accent) 14%,#ffffff15);background:color-mix(in srgb,var(--preview-surface) calc(var(--preview-opacity) * 100%),transparent);-webkit-backdrop-filter:blur(var(--preview-blur));backdrop-filter:blur(var(--preview-blur))}.studio-inspector input[type=range]{accent-color:var(--preview-accent);padding:0}.studio-inspector input[type=color]{height:42px;padding:3px}.eyebrow{letter-spacing:.14em;font-size:9px}.color-pair{grid-template-columns:repeat(3,1fr);gap:7px;display:grid}.toggle-row{align-items:center;gap:8px;display:flex!important}.toggle-row input{height:20px;accent-color:var(--preview-accent);width:20px!important;margin:0!important}.category-picker{grid-template-columns:1fr 1fr;gap:6px;display:grid}.category-picker button{color:#bbb;cursor:pointer;background:#ffffff08;border:1px solid #ffffff16;border-radius:11px;min-height:38px}.category-picker button.active{color:var(--preview-text);background:color-mix(in srgb,var(--preview-accent) 22%,transparent);border-color:color-mix(in srgb,var(--preview-accent) 55%,transparent)}", ie = class extends HTMLElement {
 	constructor() {
 		super();
 		let e = this.attachShadow({ mode: "open" }), t = document.createElement("style"), n = document.createElement("div");
-		t.textContent = te, e.append(t, n), (0, y.createRoot)(n).render(/* @__PURE__ */ (0, x.jsx)(C, {}));
+		t.textContent = `${re}\n${w}`, e.append(t, n), (0, y.createRoot)(n).render(/* @__PURE__ */ (0, x.jsx)(ne, {}));
 	}
 };
-customElements.get("homeii-studio") || customElements.define("homeii-studio", ne);
+customElements.get("homeii-studio") || customElements.define("homeii-studio", ie);
 //#endregion

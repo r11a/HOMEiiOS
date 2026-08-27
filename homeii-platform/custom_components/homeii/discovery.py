@@ -25,7 +25,9 @@ def async_build_installation_model(
             continue
         domain = entry.entity_id.split(".", 1)[0]
         device = devices.async_get(entry.device_id) if entry.device_id else None
-        area_id = entry.area_id or (device.area_id if device else None)
+        direct_area_id = entry.area_id
+        inherited_area_id = device.area_id if device else None
+        area_id = direct_area_id or inherited_area_id
         state = hass.states.get(entry.entity_id)
         item = {
             "entity_id": entry.entity_id,
@@ -33,6 +35,7 @@ def async_build_installation_model(
             "name": entry.name or entry.original_name or (state.name if state else entry.entity_id),
             "device_id": entry.device_id,
             "area_id": area_id,
+            "assignment_source": "entity" if direct_area_id else "device" if inherited_area_id else "none",
             "device_class": entry.original_device_class or (state.attributes.get("device_class") if state else None),
             "supported_features": int(state.attributes.get("supported_features", 0)) if state else 0,
             "unit_of_measurement": state.attributes.get("unit_of_measurement") if state else None,

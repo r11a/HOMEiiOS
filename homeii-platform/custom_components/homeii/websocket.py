@@ -15,7 +15,7 @@ from .const import DOMAIN
 from .discovery import async_build_installation_model
 from .storage import HomeiiStore
 from .migration import migrate_lovelace_yaml
-from .project_generator import generate_project
+from .project_generator import generate_project, merge_generated_project
 
 
 def _can_read_entity(connection: websocket_api.ActiveConnection, entity_id: str) -> bool:
@@ -87,7 +87,7 @@ async def ws_get_discovery(hass: HomeAssistant, connection: websocket_api.Active
     vol.Required("type"): "homeii/project/preview",
     vol.Optional("project_id", default="home"): str,
     vol.Optional("name", default="My HOMEii"): str,
-    vol.Optional("template", default="area-first"): str,
+    vol.Optional("template", default="homeii-signature"): str,
 })
 @websocket_api.require_admin
 @websocket_api.async_response
@@ -121,7 +121,7 @@ async def ws_project_active(hass: HomeAssistant, connection: websocket_api.Activ
     vol.Required("type"): "homeii/project/generate",
     vol.Optional("project_id", default="home"): str,
     vol.Optional("name", default="My HOMEii"): str,
-    vol.Optional("template", default="area-first"): str,
+    vol.Optional("template", default="homeii-signature"): str,
     vol.Required("revision"): int,
 })
 @websocket_api.require_admin
@@ -131,7 +131,8 @@ async def ws_project_generate(hass: HomeAssistant, connection: websocket_api.Act
     store: HomeiiStore = hass.data[DOMAIN]["store"]
     installation = async_build_installation_model(hass)
     try:
-        project = generate_project(installation, msg["project_id"], msg["name"], msg["template"])
+        generated = generate_project(installation, msg["project_id"], msg["name"], msg["template"])
+        project = merge_generated_project(generated, store.data["projects"].get(msg["project_id"]))
         result = await store.async_upsert_project(project, msg["revision"], activate=True)
     except ValueError as err:
         connection.send_error(msg["id"], str(err), "HOMEii project was not generated")

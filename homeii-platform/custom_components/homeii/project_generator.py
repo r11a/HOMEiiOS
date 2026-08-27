@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from copy import deepcopy
 from typing import Any
 
 
@@ -12,21 +13,26 @@ WIDGETS_BY_DOMAIN = {
     "media_player": "media.player",
     "camera": "camera.viewer",
     "cover": "cover.control",
-    "fan": "fan.control",
-    "vacuum": "vacuum.control",
-    "lock": "security.lock",
     "alarm_control_panel": "security.alarm",
     "switch": "switch.collection",
-    "scene": "scene.collection",
-    "script": "script.collection",
-    "weather": "weather.forecast",
-    "person": "person.presence",
 }
 
 DOMAIN_ORDER = (
-    "light", "climate", "media_player", "camera", "cover", "fan", "vacuum",
-    "lock", "alarm_control_panel", "switch", "scene", "script", "weather", "person",
-    "sensor", "binary_sensor",
+    "light", "cover", "climate", "media_player", "camera",
+    "alarm_control_panel", "switch", "sensor",
+)
+
+COLLECTION_LIMIT = 12
+SENSOR_LIMIT = 4
+AUTO_DOMAINS = set(DOMAIN_ORDER)
+DIAGNOSTIC_DEVICE_CLASSES = {
+    "battery", "signal_strength", "timestamp", "duration", "data_rate",
+    "data_size", "frequency", "voltage", "current",
+}
+NOISY_NAME_PARTS = (
+    "rssi", "linkquality", "link quality", "firmware", "uptime", "last seen",
+    "last_seen", "diagnostic", "diagnostics", "device temperature", "cpu",
+    "memory", "storage", "restart", "identify", "configuration", "device_temperature",
 )
 
 
@@ -50,26 +56,54 @@ def _sensor_widget(entity: dict[str, Any]) -> str:
     return "sensor.value"
 
 
+def _entity_score(entity: dict[str, Any]) -> int:
+    """Score dashboard usefulness without relying on vendor-specific entity ids."""
+    domain = entity.get("domain", "")
+    device_class = entity.get("device_class")
+    searchable = f"{entity.get('entity_id', '')} {entity.get('name', '')}".lower()
+    if domain not in AUTO_DOMAINS or any(part in searchable for part in NOISY_NAME_PARTS):
+        return -100
+    if domain in {"light", "climate", "media_player", "camera", "cover", "alarm_control_panel"}:
+        score = 90
+    elif domain == "switch":
+        score = 65
+    elif domain == "sensor" and device_class == "temperature":
+        score = 70
+    else:
+        score = 10
+    if device_class in DIAGNOSTIC_DEVICE_CLASSES:
+        score -= 55
+    if entity.get("available") is False:
+        score -= 45
+    return score
+
+
+def _relevant_entities(entities: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    ranked = sorted(entities, key=lambda item: (-_entity_score(item), item.get("entity_id", "")))
+    return [item for item in ranked if _entity_score(item) >= 40][:limit]
+
+
 def _area_widgets(area: dict[str, Any]) -> list[dict[str, Any]]:
     grouped: dict[str, list[dict[str, Any]]] = {}
     for entity in area.get("entities", []):
-        grouped.setdefault(entity["domain"], []).append(entity)
+        # Missing assignment_source is treated as direct for migrations/tests.
+        if entity.get("domain") in AUTO_DOMAINS and entity.get("assignment_source", "entity") == "entity":
+            grouped.setdefault(entity["domain"], []).append(entity)
 
     widgets: list[dict[str, Any]] = []
     for domain in DOMAIN_ORDER:
-        entities = grouped.pop(domain, [])
+        limit = SENSOR_LIMIT if domain == "sensor" else COLLECTION_LIMIT
+        entities = _relevant_entities(grouped.pop(domain, []), limit)
         if not entities:
             continue
-        if domain in {"sensor", "binary_sensor"}:
+        if domain == "sensor":
             for entity in entities:
-                widget_type = _sensor_widget(entity) if domain == "sensor" else "binary_sensor.status"
+                widget_type = _sensor_widget(entity)
                 widgets.append(_binding(area["area_id"], widget_type, domain, [entity], "compact"))
             continue
         widget_type = WIDGETS_BY_DOMAIN.get(domain, "entity.generic")
         widgets.append(_binding(area["area_id"], widget_type, domain, entities, _widget_size(domain, len(entities))))
 
-    for domain in sorted(grouped):
-        widgets.append(_binding(area["area_id"], "entity.generic", domain, grouped[domain], "regular"))
     return widgets
 
 
@@ -89,11 +123,12 @@ def generate_project(
     installation: dict[str, Any],
     project_id: str = "home",
     name: str = "My HOMEii",
-    template: str = "area-first",
+    template: str = "homeii-signature",
 ) -> dict[str, Any]:
     """Generate a schema-valid project preview without persisting it."""
-    if template != "area-first":
+    if template not in {"homeii-signature", "area-first"}:
         raise ValueError("unsupported_template")
+    template = "homeii-signature" if template == "area-first" else template
     safe_id = _slug(project_id, "home")
     areas: dict[str, Any] = {}
     for area in installation.get("areas", []):
@@ -101,8 +136,10 @@ def generate_project(
         areas[area_id] = {
             "areaId": area_id,
             "title": area.get("name") or area_id,
+            "titleMode": "auto",
             "picture": area.get("picture") or "",
             "hidden": False,
+            "categories": ["overview", "lighting", "climate", "media", "security"],
             "widgets": _area_widgets(area),
         }
     return {
@@ -110,8 +147,31 @@ def generate_project(
         "revision": 1,
         "id": safe_id,
         "name": name.strip()[:80] or "My HOMEii",
-        "brand": {"name": "HOMEii"},
-        "theme": {"mode": "system", "preset": "granite", "tokens": {}},
+        "template": template,
+        "brand": {"name": "HOMEii", "tagline": "The intelligent home, beautifully orchestrated", "logo": ""},
+        "theme": {"mode": "system", "preset": "rich-brown", "tokens": {"accent": "#d6a45d", "text": "#f8f5ef", "surface": "#1b1918", "radius": 24, "blur": 26, "tileOpacity": 0.72}},
         "areas": areas,
         "permissions": {"defaultRole": "viewer", "users": {}},
     }
+
+
+def merge_generated_project(generated: dict[str, Any], existing: dict[str, Any] | None) -> dict[str, Any]:
+    """Refresh HA bindings while preserving deliberate Studio overrides."""
+    if not existing:
+        return generated
+    merged = deepcopy(generated)
+    for key in ("name", "brand", "theme", "permissions"):
+        if key in existing:
+            merged[key] = deepcopy(existing[key])
+    for area_id, area in merged["areas"].items():
+        previous = existing.get("areas", {}).get(area_id, {})
+        for key in ("hidden", "categories", "picture", "titleMode"):
+            if key in previous:
+                area[key] = deepcopy(previous[key])
+        if previous.get("titleMode") == "custom":
+            area["title"] = previous.get("title", area["title"])
+        excluded = set(previous.get("excludedWidgetIds", []))
+        manual = [widget for widget in previous.get("widgets", []) if not widget.get("settings", {}).get("generated", False)]
+        area["excludedWidgetIds"] = sorted(excluded)
+        area["widgets"] = [widget for widget in area["widgets"] if widget["id"] not in excluded] + deepcopy(manual)
+    return merged

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0-alpha.1
+
+- Adds the first formal dashboard template: HOMEii Signature.
+- Auto-generation now uses only directly Area-assigned lights, covers, climate, media players, cameras, alarm panels, switches and temperature sensors.
+- Filters diagnostic, noisy and unavailable entities and caps large collections.
+- Adds synchronized branding, design tokens, Area categories and custom Area presentation controls.
+- Adds safe HA content refresh that preserves Studio overrides and explicit widget exclusions.
+- Adds responsive Signature navigation: desktop rail and mobile bottom navigation.
+
 ## 0.4.0-alpha.2
 
 - Fix the Ingress Studio module path so the bundled control plane loads from the App's authenticated `/assets` route instead of returning a blank shell.

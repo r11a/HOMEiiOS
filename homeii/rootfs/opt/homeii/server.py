@@ -443,7 +443,7 @@ async def platform_generate(request: web.Request) -> web.Response:
         "type": "homeii/project/generate",
         "project_id": str(body.get("project_id", "home")),
         "name": str(body.get("name", "My HOMEii")),
-        "template": str(body.get("template", "area-first")),
+        "template": str(body.get("template", "homeii-signature")),
         "revision": int(body.get("revision", 0)),
     })
     return web.json_response(result, status=status)
