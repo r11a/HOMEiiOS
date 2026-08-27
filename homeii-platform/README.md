@@ -4,7 +4,9 @@ HAOS-first product foundation for a synchronized, editable and auto-generated Ho
 
 ## Architecture
 
-- `homeii/`: mandatory Supervisor App control plane with Ingress, durable `/data` storage, assets, migrations and backups.
+- `/homeii` at the repository root is the installable Supervisor App. This
+  nested platform directory retains the control-plane source and architecture
+  references without a second discoverable `config.yaml`.
 - `custom_components/homeii`: narrow security bridge for HA user permissions, registries and WebSocket API.
 - Existing React panel: presentation and visual editor; it will migrate from browser `localStorage` to this API.
 - Existing React panel: presentation, onboarding and visual editor.
