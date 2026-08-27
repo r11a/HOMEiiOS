@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-alpha.5
+
+- Disable browser caching for the Ingress bootstrap modules.
+- Report frontend bootstrap and runtime failures into the App log.
+
 ## 0.1.0-alpha.4
 
 - Fix the Ingress frontend module URL from `/assets/assets/homeiios-panel.js`

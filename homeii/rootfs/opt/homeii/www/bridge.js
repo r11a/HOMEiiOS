@@ -2,6 +2,18 @@ const panel = document.querySelector("homeiios-panel");
 const boot = document.querySelector("#boot");
 let currentStates = {};
 
+const reportError = (error, context = "runtime") => {
+  const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  fetch("./api/frontend-error", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ context, message, stack: error?.stack || "", href: location.href })
+  }).catch(() => {});
+};
+
+addEventListener("error", (event) => reportError(event.error || event.message, "window.error"));
+addEventListener("unhandledrejection", (event) => reportError(event.reason, "unhandledrejection"));
+
 if (!customElements.get("ha-icon")) {
   customElements.define("ha-icon", class extends HTMLElement {
     connectedCallback() {
@@ -53,5 +65,6 @@ try {
   addEventListener("resize", () => { panel.narrow = matchMedia("(max-width: 760px)").matches; });
 } catch (error) {
   boot.textContent = `HOMEiiOS לא הצליח להתחבר: ${error.message}`;
+  reportError(error, "bootstrap");
   console.error(error);
 }

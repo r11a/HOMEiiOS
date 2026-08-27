@@ -52,7 +52,7 @@ async def health(_: web.Request) -> web.Response:
     status, config = await core_request("GET", "/config")
     return web.json_response({
         "status": "ok" if status == 200 else "degraded",
-        "version": "0.1.0-alpha.4",
+        "version": "0.1.0-alpha.5",
         "home_assistant": status == 200,
         "location_name": config.get("location_name") if isinstance(config, dict) else None,
     })
@@ -85,14 +85,32 @@ async def service(request: web.Request) -> web.Response:
     return web.json_response(result, status=status)
 
 
+async def frontend_error(request: web.Request) -> web.Response:
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {"message": await request.text()}
+    LOGGER.error("Frontend error: %s", json.dumps(payload, ensure_ascii=False)[:2000])
+    return web.json_response({"reported": True})
+
+
 async def index(_: web.Request) -> web.FileResponse:
     return web.FileResponse(WWW / "index.html")
 
 
-app = web.Application(client_max_size=4 * 1024 * 1024)
+@web.middleware
+async def no_cache_boot_files(request: web.Request, handler: Any) -> web.StreamResponse:
+    response = await handler(request)
+    if request.path == "/" or request.path.endswith(("bridge.js", "homeiios-panel.js", "config.json")):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    return response
+
+
+app = web.Application(client_max_size=4 * 1024 * 1024, middlewares=[no_cache_boot_files])
 app.router.add_get("/api/health", health)
 app.router.add_get("/api/bootstrap", bootstrap)
 app.router.add_post("/api/services/{domain}/{service}", service)
+app.router.add_post("/api/frontend-error", frontend_error)
 app.router.add_get("/", index)
 app.router.add_static("/assets", WWW, show_index=False)
 
