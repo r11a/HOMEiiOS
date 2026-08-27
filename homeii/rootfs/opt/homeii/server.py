@@ -19,6 +19,7 @@ PUBLISHED_PROJECT = Path("/data/homeiios-published.json")
 TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
 CORE_API = "http://supervisor/core/api"
 CORE_WS = "ws://supervisor/core/websocket"
+CORE_WS_MAX_MESSAGE_SIZE = 32 * 1024 * 1024
 
 
 def load_options() -> dict[str, Any]:
@@ -58,7 +59,9 @@ async def core_ws(commands: list[dict[str, Any]]) -> list[Any]:
         raise RuntimeError("Supervisor token is unavailable")
     timeout = ClientTimeout(total=20)
     async with ClientSession(timeout=timeout) as session:
-        async with session.ws_connect(CORE_WS) as socket:
+        # Large HA installations can return registries above aiohttp's 4 MiB
+        # default. Keep a finite ceiling while allowing realistic registries.
+        async with session.ws_connect(CORE_WS, max_msg_size=CORE_WS_MAX_MESSAGE_SIZE) as socket:
             hello = await socket.receive_json()
             if hello.get("type") != "auth_required":
                 raise RuntimeError("Unexpected Home Assistant WebSocket greeting")
@@ -155,7 +158,7 @@ async def health(_: web.Request) -> web.Response:
     status, config = await core_request("GET", "/config")
     return web.json_response({
         "status": "ok" if status == 200 else "degraded",
-        "version": "0.2.0-alpha.1",
+        "version": "0.2.0-alpha.2",
         "home_assistant": status == 200,
         "location_name": config.get("location_name") if isinstance(config, dict) else None,
     })

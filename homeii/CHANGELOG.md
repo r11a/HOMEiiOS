@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0-alpha.2
+
+- Raise the authenticated Home Assistant WebSocket message ceiling from the
+  aiohttp 4 MiB default to a bounded 32 MiB so Studio discovery works with
+  large entity registries.
+
 ## 0.2.0-alpha.1
 
 - Add the first HOMEii Studio vertical slice with Area discovery, a responsive
