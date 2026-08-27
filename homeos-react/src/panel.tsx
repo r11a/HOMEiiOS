@@ -3,6 +3,9 @@ import { createRoot, type Root } from "react-dom/client";
 import { HomeOSApp } from "./ui/HomeOSApp";
 import type { HomeAssistant } from "./types";
 import styles from "./styles.css?inline";
+import { registerMdiIconElement } from "./mdiElement";
+
+registerMdiIconElement();
 
 class HOMEiiOSPanel extends HTMLElement {
   private root: Root;

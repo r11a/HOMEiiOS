@@ -5,6 +5,7 @@ import { RoomView } from "./RoomView";
 import { HomeiiIcon, roomIconName } from "./HomeiiIcon";
 import { SpecialView } from "./SpecialView";
 import { ControlCenter } from "./ControlCenter";
+import { Studio } from "./Studio";
 
 type Sheet = "rooms" | "media" | "security" | "more" | null;
 type StatusDomain = "light" | "climate" | "media_player" | "security" | "person";
@@ -48,6 +49,50 @@ async function readConfig(): Promise<HomeOSConfig> {
   }
 }
 
+type RuntimeWidget = { type: string; title: string; entityIds: string[]; visible: boolean; order: number };
+type RuntimeArea = { id: string; name: string; picture?: string | null; widgets: RuntimeWidget[] };
+type RuntimeProject = { schemaVersion: number; status: string; theme?: { preset?: string; tokens?: Record<string, string | number> }; areas: Record<string, RuntimeArea> };
+
+function runtimeIcon(domain: string) {
+  return ({ light: "mdi:lightbulb-group", climate: "mdi:thermostat", media_player: "mdi:speaker-multiple", camera: "mdi:cctv", lock: "mdi:shield-lock-outline", cover: "mdi:blinds", vacuum: "mdi:robot-vacuum" } as Record<string, string>)[domain] || "mdi:home-outline";
+}
+
+function runtimeProjectConfig(base: HomeOSConfig, project: RuntimeProject, hass?: HomeAssistant): HomeOSConfig {
+  if (project.schemaVersion !== 2 || project.status !== "published") return base;
+  const areas = Object.values(project.areas || {});
+  const rooms: RoomConfig[] = areas.map((area) => {
+    const domains = [...new Set(area.widgets.filter((widget) => widget.visible).map((widget) => widget.type))];
+    return { id: area.id, areaIds: [area.id], name: area.name, icon: runtimeIcon(domains[0] || ""), subtitle: domains.map((domain) => domain.replace("media_player", "מדיה").replace("climate", "אקלים").replace("light", "תאורה")).join(" · "), legacyPath: area.id };
+  });
+  const definitions: Record<string, RoomDefinition> = {};
+  const backgrounds = { ...base.backgrounds };
+  for (const area of areas) {
+    const widgets = [...area.widgets].filter((widget) => widget.visible).sort((a, b) => a.order - b.order);
+    const entitiesFor = (type: string) => widgets.filter((widget) => widget.type === type).flatMap((widget) => widget.entityIds || []);
+    const lights = entitiesFor("light").map((entityId) => ({ entity: entityId, name: String(hass?.states[entityId]?.attributes.friendly_name || entityId.split(".")[1]?.replaceAll("_", " ") || entityId), icon: "mdi:lightbulb-outline" }));
+    definitions[area.id] = {
+      climate: entitiesFor("climate")[0], media: entitiesFor("media_player")[0], lights,
+      curtains: entitiesFor("cover").map((entityId) => ({ entity: entityId, name: String(hass?.states[entityId]?.attributes.friendly_name || entityId), icon: "mdi:blinds", kind: "curtain" as const })),
+      statusDomains: (["light", "climate", "media_player", "security"] as const).filter((domain) => domain === "security" ? widgets.some((widget) => ["camera", "lock", "alarm_control_panel", "binary_sensor"].includes(widget.type)) : entitiesFor(domain).length > 0)
+    };
+    if (area.picture) backgrounds[area.id] = area.picture;
+  }
+  const tokens = project.theme?.tokens || {};
+  return {
+    ...base, rooms, roomDefinitions: definitions, backgrounds,
+    appearance: { ...base.appearance!, ...(typeof tokens.accent === "string" ? { accent: tokens.accent, sidebarAccent: tokens.accent } : {}), ...(typeof tokens.surface === "string" ? { sectionColor: tokens.surface, tileColor: tokens.surface } : {}), ...(typeof tokens.text === "string" ? { textColor: tokens.text } : {}) }
+  };
+}
+
+async function readRuntimeProject(): Promise<RuntimeProject | null> {
+  if (!location.pathname.includes("/api/hassio_ingress/")) return null;
+  try {
+    const response = await fetch(`./api/runtime-project?t=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) return null;
+    return await response.json() as RuntimeProject;
+  } catch { return null; }
+}
+
 export function HomeOSApp({ hass, narrow }: { hass?: HomeAssistant; narrow: boolean; route: unknown; panel: unknown }) {
   const [config, setConfig] = useState<HomeOSConfig>(defaultConfig);
   const [sheet, setSheet] = useState<Sheet>(null);
@@ -70,12 +115,18 @@ export function HomeOSApp({ hass, narrow }: { hass?: HomeAssistant; narrow: bool
   const [globalFeedback,setGlobalFeedback]=useState<{message:string;type:string}|null>(null);
 
   useEffect(() => {
-    readConfig().then((next) => {
+    Promise.all([readConfig(), readRuntimeProject()]).then(([base, project]) => {
+      const next = project ? runtimeProjectConfig(base, project, hass) : base;
       setConfig(next);
       const saved = localStorage.getItem("homeiios-appearance");
       setAppearance(saved ? { ...next.appearance!, ...JSON.parse(saved) } : next.appearance!);
     });
-  }, []);
+  }, [Boolean(hass)]);
+  useEffect(() => {
+    const refresh = () => Promise.all([readConfig(), readRuntimeProject()]).then(([base, project]) => setConfig(project ? runtimeProjectConfig(base, project, hass) : base));
+    window.addEventListener("homeii-project-published", refresh);
+    return () => window.removeEventListener("homeii-project-published", refresh);
+  }, [Boolean(hass)]);
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const update = () => setSystemDark(media.matches);
@@ -255,6 +306,7 @@ export function HomeOSApp({ hass, narrow }: { hass?: HomeAssistant; narrow: bool
           <aside className="admin-menu glass" aria-label="כלי מנהל">
             <header className="admin-menu-head"><div><small>HOMEii Studio</small><strong>הגדרות הממשק</strong></div><button className="admin-close" onClick={() => setMenuOpen(false)} aria-label="סגירת הגדרות"><Icon icon="mdi:close" /></button></header>
             <p>עריכת המבנה נעשית בקובץ config.json. משתמשים רגילים אינם רואים תפריט זה.</p>
+            <button className="studio-launch" onClick={() => { setMenuOpen(false); setActiveView("studio"); }}><Icon icon="mdi:view-dashboard-outline" /> פתיחת HOMEii Studio</button>
             <button onClick={() => go("/config/dashboard")}>ניהול דשבורדים</button>
             <button onClick={() => readConfig().then(setConfig)}>טעינה מחדש של התצורה</button>
             <button onClick={toggleKiosk}><Icon icon="mdi:fullscreen" /> מצב מסך מלא · Kiosk</button>
@@ -264,7 +316,7 @@ export function HomeOSApp({ hass, narrow }: { hass?: HomeAssistant; narrow: bool
           </aside>
         )}
 
-        {activeView === "home" ? <>
+        {activeView === "studio" ? <Studio hass={hass} onClose={() => openView("home")} /> : activeView === "home" ? <>
         <section className="hero" aria-label="מצב הבית">
           <div className="hero-overlay" />
           <div className="hero-copy">

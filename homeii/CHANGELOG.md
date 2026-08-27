@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0-alpha.1
+
+- Add the first HOMEii Studio vertical slice with Area discovery, a responsive
+  canvas, drag-and-drop ordering, widget sizing, visibility controls, theme
+  tokens, device previews and safe Lovelace YAML migration reports.
+- Persist draft and published projects independently and make the dashboard
+  runtime consume only the last published revision on every device.
+- Replace the browser's missing `ha-icon` fallback with a generated registry of
+  native Material Design SVG paths, eliminating diamond placeholder glyphs.
+- Add optimistic revision checks and atomic project writes to avoid silently
+  overwriting Studio changes.
+
 ## 0.1.0-alpha.6
 
 - Build React explicitly for a browser production runtime.

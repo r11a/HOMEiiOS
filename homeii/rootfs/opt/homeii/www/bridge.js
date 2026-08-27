@@ -14,16 +14,6 @@ const reportError = (error, context = "runtime") => {
 addEventListener("error", (event) => reportError(event.error || event.message, "window.error"));
 addEventListener("unhandledrejection", (event) => reportError(event.reason, "unhandledrejection"));
 
-if (!customElements.get("ha-icon")) {
-  customElements.define("ha-icon", class extends HTMLElement {
-    connectedCallback() {
-      this.setAttribute("aria-hidden", "true");
-      this.style.cssText = "display:inline-grid;place-items:center;width:1em;height:1em;font-size:1em";
-      this.textContent = "◆";
-    }
-  });
-}
-
 const api = async (path, options = {}) => {
   const response = await fetch(path, { cache: "no-store", ...options });
   if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
