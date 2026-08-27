@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-alpha.6
+
+- Build React explicitly for a browser production runtime.
+- Remove Node-only `process.env` references that prevented the panel module
+  from executing in Home Assistant Ingress.
+- Add a build gate that rejects Node-only globals in future browser bundles.
+
 ## 0.1.0-alpha.5
 
 - Disable browser caching for the Ingress bootstrap modules.

@@ -10,7 +10,7 @@ from typing import Any
 
 from aiohttp import ClientSession, ClientTimeout, web
 
-WWW = Path("/opt/homeii/www")
+WWW = Path(os.environ.get("HOMEII_WWW_PATH", "/opt/homeii/www"))
 OPTIONS = Path("/data/options.json")
 TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
 CORE_API = "http://supervisor/core/api"
@@ -52,7 +52,7 @@ async def health(_: web.Request) -> web.Response:
     status, config = await core_request("GET", "/config")
     return web.json_response({
         "status": "ok" if status == 200 else "degraded",
-        "version": "0.1.0-alpha.5",
+        "version": "0.1.0-alpha.6",
         "home_assistant": status == 200,
         "location_name": config.get("location_name") if isinstance(config, dict) else None,
     })
